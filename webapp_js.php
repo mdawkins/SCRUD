@@ -17,7 +17,7 @@ foreach ( $colslist as $i => $col ) {
     "aoColumnDefs": [
       { "bSortable": false, "aTargets": [-1] }
     ],
-    "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+    "lengthMenu": [[15, 50, 100, -1], [15, 50, 100, "All"]],
     "oLanguage": {
       "oPaginate": {
         "sFirst":       " ",

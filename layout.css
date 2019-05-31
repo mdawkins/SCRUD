@@ -68,7 +68,7 @@ button {
   transition:         all 0.2s ease 0s;
 }
 select {
-  -webkit-appearance: none;
+//  -webkit-appearance: none;
 }
 
 input[type=text],
@@ -472,6 +472,7 @@ table.datatable tbody td.functions .function_buttons span {
   float: right;
   position: relative;
 }
+
 .lightbox_content .input_container .field_container label.error {
   width: 400px;
   display: block;
@@ -491,7 +492,7 @@ table.datatable tbody td.functions .function_buttons span {
 .lightbox_content .input_container .field_container label.error.valid {
   display: none !important;
 }
-.lightbox_content .input_container .field_container input {
+.lightbox_content .input_container .field_container input, select {
   width: 400px;
   height: 32px;
   background-color: #f9f9f9;

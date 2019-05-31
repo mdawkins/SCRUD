@@ -2,6 +2,7 @@
 if ( isset($_GET["page"]) ) {
 	require_once "pages/".$_GET["page"].".php";
 	$addgetvar = "&page=".$_GET["page"];
+	if ( empty($pagetitle) ) { $pagetitle = "Missing Title"; }
 }
 ?>
 
@@ -56,19 +57,65 @@ foreach ( $colslist as $i => $col ) {
 	<form class="form add" id="form_company" data-id="" novalidate>
 <?php
 foreach ( $colslist as $i => $col ) {
-	if ( $col["required"] == "yes" ){
-		$errspan = "<span class='required'>*</span>";
-		$errinput = "required";
-	} else {
-		unset($errspan);
-		unset($errinput);
+	if ( $col["input_type"] != "noform" ) {
+		if ( $col["required"] == "yes" ) {
+			$errspan = "<span class='required'>*</span>";
+			$errinput = "required";
+		} else {
+			unset($errspan);
+			unset($errinput);
+		}
+		echo "<div class='input_container'>\n";
+		echo "\t<label for='".$col["column"]."'>".$col["title"].": $errspan</label>\n";
+		echo "\t<div class='field_container'>\n";
+		switch ( $col["input_type"] ) {
+
+		case "text":
+			echo "\t\t<input type=\"text\" class=\"text\" name=\"".$col["column"]."\" id=\"".$col["column"]."\" value=\"\" $errinput>\n";
+			break;
+
+		case "number":
+		case "currency":
+			echo "\t\t<input type=\"number\" class=\"text\" name=\"".$col["column"]."\" id=\"".$col["column"]."\" value=\"\" $errinput>\n";
+			break;
+
+		case "date":
+			echo "\t\t<input type=\"date\" class=\"text\" name=\"".$col["column"]."\" id=\"".$col["column"]."\" value=\"\" $errinput>\n";
+			break;
+
+		case "datetime":
+			echo "\t\t<input type=\"datetime-local\" class=\"text\" name=\"".$col["column"]."\" id=\"".$col["column"]."\" value=\"\" $errinput>\n";
+			break;
+
+		case "textarea":
+			echo "\t\t<input type=\"textarea\" class=\"text\" name=\"".$col["column"]."\" id=\"".$col["column"]."></textarea>\n";
+			break;
+
+		case "checkbox":
+			echo "\t\t<input type=\"checkbox\" class=\"text\" name=\"".$col["column"]."\" id=\"".$col["column"]."\" value=\"yes\">\n";
+			break;
+
+		case "tableselect":
+			include_once $funcroot.'selecttbllist.php';
+		case "select":
+			if ( $col["multiple"] == "yes" ) { $multiple = "multiple"; $size = "size=\"3\""; 
+			} else { unset($multiple); $size = "size=\"1\""; }
+		echo "\t\t<select name=\"".$col["column"]."[]\"  id=\"".$col["column"]."\" ".$size." ".$multiple.">
+			<option value=\"\">Select a ".$col["title"]."</option>\n";
+			$multisels = explode(";", ${$col["column"]});
+			foreach ( $lists[$col["column"]] as $list ) {
+				if ( array_search($list["key"], $multisels) !== false ) { $selected="selected"; }
+				if ( $list["key"] != "selectparent" ) {
+					echo "\t\t\t<option value='".$list["key"]."' $selected >".$list["title"]."</option>\n";
+				} else { $selectnested = "true"; }
+				unset($selected);
+			}
+		echo "\t\t</select>\n";
+		break;
+		}
+		echo "\t</div>\n";
+		echo "</div>\n";
 	}
-	echo "<div class='input_container'>\n";
-	echo "	<label for='".$col["column"]."'>".$col["title"].": $errspan</label>\n";
-	echo "	<div class='field_container'>\n";
-	echo "		<input type='".$col["input_type"]."' class='text' name='".$col["column"]."' id='".$col["column"]."' value='' $errinput>\n";
-	echo "	</div>\n";
-	echo "</div>\n";
 }
 ?>
           <div class="button_container">
