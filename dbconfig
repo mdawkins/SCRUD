@@ -1,0 +1,7 @@
+<?php
+// Database details
+$db_server   = 'localhost';
+$db_username = '***';
+$db_password = '***';
+$db_name     = '***';
+?>

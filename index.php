@@ -1,7 +1,14 @@
+<?php
+if ( isset($_GET["page"]) ) {
+	require_once "pages/".$_GET["page"].".php";
+	$addgetvar = "&page=".$_GET["page"];
+}
+?>
+
 <!doctype html>
 <html lang="en" dir="ltr">
   <head>
-    <title>jQuery SCRUD system</title>
+  <title><?php echo $pagetitle; ?></title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=1000, initial-scale=1">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
@@ -11,28 +18,26 @@
     <script charset="utf-8" src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <script charset="utf-8" src="//cdn.datatables.net/1.10.0/js/jquery.dataTables.js"></script>
     <script charset="utf-8" src="//cdn.jsdelivr.net/jquery.validation/1.13.1/jquery.validate.min.js"></script>
-    <script charset="utf-8" src="webapp.js"></script>
+<!--    <script charset="utf-8" src="webapp_js.php"></script> --!>
+	<script><?php require_once "webapp_js.php"; ?></script>
   </head>
   <body>
 
     <div id="page_container">
 
-      <h1>Largest IT companies by revenue</h1>
+      <h1><?php echo $pagetitle; ?></h1>
 
-      <button type="button" class="button" id="add_company">Add company</button>
+      <button type="button" class="button" id="add_company">Add Record</button>
 
       <table class="datatable" id="table_companies">
         <thead>
-          <tr>
-            <th>Rank</th>
-            <th>Company name</th>
-            <th>Industries</th>
-            <th>Revenue</th>
-            <th>Year</th>
-            <th>Employees</th>
-            <th>Market cap</th>
-            <th>Headquarters</th>
-            <th>Functions</th>
+	  <tr>
+<?php
+foreach ( $colslist as $i => $col ) {
+	echo "<th>".$col["title"]."</th>\n";
+}
+?>
+	    <th>Functions</th>
           </tr>
         </thead>
         <tbody>
@@ -47,58 +52,27 @@
       <div class="lightbox_close"></div>
       <div class="lightbox_content">
         
-        <h2>Add company</h2>
-        <form class="form add" id="form_company" data-id="" novalidate>
-          <div class="input_container">
-            <label for="rank">Rank: <span class="required">*</span></label>
-            <div class="field_container">
-              <input type="number" step="1" min="0" class="text" name="rank" id="rank" value="" required>
-            </div>
-          </div>
-          <div class="input_container">
-            <label for="company_name">Company name: <span class="required">*</span></label>
-            <div class="field_container">
-              <input type="text" class="text" name="company_name" id="company_name" value="" required>
-            </div>
-          </div>
-          <div class="input_container">
-            <label for="industries">Industries: <span class="required">*</span></label>
-            <div class="field_container">
-              <input type="text" class="text" name="industries" id="industries" value="" required>
-            </div>
-          </div>
-          <div class="input_container">
-            <label for="revenue">Revenue: <span class="required">*</span></label>
-            <div class="field_container">
-              <input type="number" step="1" min="0" class="text" name="revenue" id="revenue" value="" required>
-            </div>
-          </div>
-          <div class="input_container">
-            <label for="fiscal_year">Fiscal year: <span class="required">*</span></label>
-            <div class="field_container">
-              <input type="number" min="0" class="text" name="fiscal_year" id="fiscal_year" value="" required>
-            </div>
-          </div>
-          <div class="input_container">
-            <label for="employees">Employees: <span class="required">*</span></label>
-            <div class="field_container">
-              <input type="number" min="0" class="text" name="employees" id="employees" value="" required>
-            </div>
-          </div>
-          <div class="input_container">
-            <label for="market_cap">Market cap: <span class="required">*</span></label>
-            <div class="field_container">
-              <input type="number" step="1" min="0" class="text" name="market_cap" id="market_cap" value="" required>
-            </div>
-          </div>
-          <div class="input_container">
-            <label for="headquarters">Headquarters: <span class="required">*</span></label>
-            <div class="field_container">
-              <input type="text" class="text" name="headquarters" id="headquarters" value="" required>
-            </div>
-          </div>
+        <h2>##blank##</h2>
+	<form class="form add" id="form_company" data-id="" novalidate>
+<?php
+foreach ( $colslist as $i => $col ) {
+	if ( $col["required"] == "yes" ){
+		$errspan = "<span class='required'>*</span>";
+		$errinput = "required";
+	} else {
+		unset($errspan);
+		unset($errinput);
+	}
+	echo "<div class='input_container'>\n";
+	echo "	<label for='".$col["column"]."'>".$col["title"].": $errspan</label>\n";
+	echo "	<div class='field_container'>\n";
+	echo "		<input type='".$col["input_type"]."' class='text' name='".$col["column"]."' id='".$col["column"]."' value='' $errinput>\n";
+	echo "	</div>\n";
+	echo "</div>\n";
+}
+?>
           <div class="button_container">
-            <button type="submit">Add company</button>
+            <button type="submit">##blank##</button>
           </div>
         </form>
         
