@@ -92,7 +92,7 @@ foreach ( $colslist as $i => $col ) {
 			break;
 
 		case "checkbox":
-			echo "\t\t<input type=\"checkbox\" class=\"text\" name=\"".$col["column"]."\" id=\"".$col["column"]."\" value=\"yes\">\n";
+			echo "\t\t<input type=\"checkbox\" class=\"text\" name=\"".$col["column"]."\" id=\"".$col["column"]."\" value=\"1\" >\n";
 			break;
 
 		case "tableselect":
@@ -100,7 +100,8 @@ foreach ( $colslist as $i => $col ) {
 		case "select":
 			if ( $col["multiple"] == "yes" ) { $multiple = "multiple"; $size = "size=\"3\""; 
 			} else { unset($multiple); $size = "size=\"1\""; }
-		echo "\t\t<select name=\"".$col["column"]."[]\"  id=\"".$col["column"]."\" ".$size." ".$multiple.">
+			//echo "\t\t<select class=\"text\" name=\"".$col["column"]."[]\" id=\"".$col["column"]."\" ".$size." ".$multiple.">
+			echo "\t\t<select class=\"text\" name=\"".$col["column"]."\" id=\"".$col["column"]."\" ".$size." ".$multiple.">
 			<option value=\"\">Select a ".$col["title"]."</option>\n";
 			$multisels = explode(";", ${$col["column"]});
 			foreach ( $lists[$col["column"]] as $list ) {
@@ -110,7 +111,7 @@ foreach ( $colslist as $i => $col ) {
 				} else { $selectnested = "true"; }
 				unset($selected);
 			}
-		echo "\t\t</select>\n";
+			echo "\t\t</select>\n";
 		break;
 		}
 		echo "\t</div>\n";

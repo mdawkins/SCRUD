@@ -6,8 +6,11 @@ $(document).ready(function(){
     "columns": [
 <?php
 foreach ( $colslist as $i => $col ) {
-	if ( $col["input_type"] == "currency" || $col["input_type"] == "number" )
+	if ( $col["colwidth"] == "yes" ) {
+		$sClassstring = ', "sClass": "truncate"';
+	} elseif ( $col["input_type"] == "currency" ) {
 		$sClassstring = ', "sClass": "integer"';
+	}
 	echo "\t{ \"data\": \"".$col["column"]."\"$sClassstring },\n";
 	unset($sClassstring);
 }
@@ -122,7 +125,11 @@ foreach ( $colslist as $i => $col ) {
     $('#form_company .field_container').removeClass('valid').removeClass('error');
 <?php
 foreach ( $colslist as $i => $col ) {
-	echo "\t$('#form_company #".$col["column"]."').val('');\n";
+	if ( $col["multiple"] == "yes" ) {
+		// an array needs to be handled here
+		echo "\t$('#form_company #".$col["column"]."').val();\n";
+	} else
+		echo "\t$('#form_company #".$col["column"]."').val('');\n";
 }
 ?>
     show_lightbox();
@@ -183,14 +190,20 @@ foreach ( $colslist as $i => $col ) {
     request.done(function(output){
       if (output.result == 'success'){
         $('.lightbox_content h2').text('Edit Record');
-        $('#form_company button').text('Edit Record');
+        $('#form_company button').text('Update Record');
         $('#form_company').attr('class', 'form edit');
         $('#form_company').attr('data-id', id);
         $('#form_company .field_container label.error').hide();
         $('#form_company .field_container').removeClass('valid').removeClass('error');
 <?php
 foreach ( $colslist as $i => $col ) {
-	echo "\t$('#form_company #".$col["column"]."').val(output.data[0].".$col["column"].");\n";
+	if ( $col["multiple"] == "yes" ) {
+		// an array needs to be handled here
+		echo "\t$('#form_company #".$col["column"]."').val(output.data[0].".$col["column"].");\n";
+	} elseif ( $col["input_type"] == "checkbox" ) {
+		echo "\t$('#form_company #".$col["column"]."').prop('checked', ( output.data[0].".$col["column"]." == 1 ) );\n";
+	} else
+		echo "\t$('#form_company #".$col["column"]."').val(output.data[0].".$col["column"].");\n";
 }
 ?>
         hide_loading_message();
