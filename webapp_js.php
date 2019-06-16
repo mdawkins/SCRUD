@@ -2,6 +2,7 @@ $(document).ready(function(){
   
   // On page load: datatable
   var table_companies = $('#table_companies').dataTable({
+    "dom": '<"header"<"toolbar">f>rt<"bottom"pil><"clear">',
     "ajax": "data.php?job=get_companies<?php echo $addgetvar; ?>",
     "columns": [
 <?php
@@ -29,11 +30,12 @@ foreach ( $colslist as $i => $col ) {
         "sLast":        " ",
       },
       "sLengthMenu":    "Records per page: _MENU_",
-      "sInfo":          "Total of _TOTAL_ records (showing _START_ to _END_)",
+      "sInfo":          "Displaying _START_ to _END_ / _TOTAL_ Total",
       "sInfoFiltered":  "(filtered from _MAX_ total records)"
     }
   });
-  
+  $("div.toolbar").html('<button type="button" class="button" id="add_company">Add Record</button>'); 
+
   // On page load: form validation
   jQuery.validator.setDefaults({
     success: 'valid',

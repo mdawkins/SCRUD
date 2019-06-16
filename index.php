@@ -1,4 +1,5 @@
 <?php
+require_once "fundsmap_conf.inc";
 if ( isset($_GET["page"]) ) {
 	require_once "pages/".$_GET["page"].".php";
 	$addgetvar = "&page=".$_GET["page"];
@@ -14,22 +15,52 @@ if ( isset($_GET["page"]) ) {
     <meta name="viewport" content="width=1000, initial-scale=1">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Oxygen:400,700">
-    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="layout.css">
     <script charset="utf-8" src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <script charset="utf-8" src="//cdn.datatables.net/1.10.0/js/jquery.dataTables.js"></script>
     <script charset="utf-8" src="//cdn.jsdelivr.net/jquery.validation/1.13.1/jquery.validate.min.js"></script>
-<!--    <script charset="utf-8" src="webapp_js.php"></script> --!>
-	<script><?php require_once "webapp_js.php"; ?></script>
+    <script>
+/* Toggle between adding and removing the "responsive" class to topnav when the user clicks on the icon */
+function myFunction() {
+  var x = document.getElementById("myTopnav");
+  if (x.className === "topnav") {
+    x.className += " responsive";
+  } else {
+    x.className = "topnav";
+  }
+}
+
+function openNav() {
+	  document.getElementById("myNav").style.width = "250px";
+	  }
+
+function closeNav() {
+  document.getElementById("myNav").style.width = "0%";
+}
+    </script>
+    <script><?php require_once "webapp_js.php"; ?></script>
   </head>
   <body>
+    <!-- top menu bar --!>
+    <div class="topnav" id="myTopnav">
+     <a class="active" href="#home" onclick="openNav()"><i class="fa fa-fw fa-bars"></i>Menu</a>
+     <a href="#news"><i class="fa fa-fw fa-check-square"></i>News</a>
+     <a href="#contact"><i class="fa fa-fw fa-square"></i>Contact</a>
+     <a href="#about"><i class="fa fa-fw fa-home"></i>About</a>
+     <a href="javascript:void(0);" class="icon" onclick="myFunction()">
+      <i class="fa fa-bars"></i>
+     </a>
+    </div>
+
+    <div id="myNav" class="overlay">
+     <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+     <div class="overlay-content">
+<?php echo $menuhtml; ?>
+     </div>
+    </div>
 
     <div id="page_container">
-
-      <h1><?php echo $pagetitle; ?></h1>
-
-      <button type="button" class="button" id="add_company">Add Record</button>
-
       <table class="datatable" id="table_companies">
         <thead>
 	  <tr>
