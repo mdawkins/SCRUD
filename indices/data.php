@@ -7,7 +7,8 @@ if ( isset($_GET["page"]) ) {
 }
 
 // Database details
-require_once ".dbconfig";
+require_once ".serv.conf";
+#require_once ".dbconfig";
 
 
 // Get job (and id)
@@ -38,7 +39,7 @@ $mysql_data = array();
 if ($job != ''){
   
   // Connect to database
-  $db_connection = mysqli_connect($db_server, $db_username, $db_password, $db_name);
+  $db_connection = mysqli_connect($servername, $username, $password, $database);
   if (mysqli_connect_errno()){
     $result  = 'error';
     $message = 'Failed to connect to database: ' . mysqli_connect_error();

@@ -1,8 +1,11 @@
 <?php
-require_once "fundsmap_conf.inc";
+//require_once "fundsmap_conf.inc";
 if ( isset($_GET["page"]) ) {
 	require_once "pages/".$_GET["page"].".php";
 	$addgetvar = "&page=".$_GET["page"];
+	if ( !empty($_GET["app"]) ) {
+		$addgetvar .= "&app=".$_GET["app"];
+	}	
 	if ( empty($pagetitle) ) { $pagetitle = "Missing Title"; }
 }
 ?>
@@ -16,10 +19,11 @@ if ( isset($_GET["page"]) ) {
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Oxygen:400,700">
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="layout.css">
-    <script charset="utf-8" src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-    <script charset="utf-8" src="//cdn.datatables.net/1.10.0/js/jquery.dataTables.js"></script>
+<?php include_once "$pajmroot/css/layout.css"; ?>
+    <script charset="utf-8" src="//code.jquery.com/jquery-3.3.1.js"></script>
+    <script charset="utf-8" src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
     <script charset="utf-8" src="//cdn.jsdelivr.net/jquery.validation/1.13.1/jquery.validate.min.js"></script>
+    <script charset="utf-8" src="//cdn.datatables.net/fixedheader/3.1.5/js/dataTables.fixedHeader.min.js"></script>
     <script>
 /* Toggle between adding and removing the "responsive" class to topnav when the user clicks on the icon */
 function myFunction() {
@@ -39,7 +43,7 @@ function closeNav() {
   document.getElementById("myNav").style.width = "0%";
 }
     </script>
-    <script><?php require_once "webapp_js.php"; ?></script>
+    <script><?php require_once "$pajmroot/js/webapp_js.php"; ?></script>
   </head>
   <body>
     <!-- top menu bar --!>
@@ -127,7 +131,7 @@ foreach ( $colslist as $i => $col ) {
 			break;
 
 		case "tableselect":
-			include_once $funcroot.'selecttbllist.php';
+			include_once "$funcroot/selecttbllist.php";
 		case "select":
 			if ( $col["multiple"] == "yes" ) { $multiple = "multiple"; $size = "size=\"3\""; 
 			} else { unset($multiple); $size = "size=\"1\""; }

@@ -1,3 +1,5 @@
+<style>
+
 html {
   font-size: 14px;
   overflow-y: scroll;
@@ -234,7 +236,7 @@ h1 {
 }
 
 button.button {
-  height: 35px;
+  height: 30px;
   display: inline-block;
   background-color: #999;
   font-weight: 700;
@@ -244,7 +246,7 @@ button.button {
   -webkit-border-radius: 6px;
   -moz-border-radius:    6px;
   border-radius:         6px;
-  margin: 0 0 5px 0;
+//  margin: 0 0 5px 0;
 }
 button.button:hover,
 button.button:active {
@@ -254,7 +256,7 @@ button.button:active {
 /* Datatable ------------------------------------------------------------------------------------ */
 .dataTables_wrapper {
   position: relative;
-  padding: 5px 0 5px 0;
+//  padding: 5px 0 5px 0;
 }
 
 .dataTables_wrapper .header {
@@ -407,7 +409,7 @@ table.datatable {
 table.datatable th,
 table.datatable td {
   background-color: #fff;
-  padding: 5px 10px 5px 10px;
+  padding: 2px 10px 2px 10px;
   border: 1px solid #ccc;
 }
 
@@ -456,6 +458,11 @@ table.datatable tbody td.truncate {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+table.datatable tbody th.functions, td.functions {
+  max-width: 70px;
+  text-align: center;
+  padding: 1px 0 1px 0;
 }
 
 table.datatable tbody td.functions .function_buttons {
@@ -578,7 +585,7 @@ table.datatable tbody td.functions .function_buttons span {
 
 .lightbox_content .input_container {
   width: auto;
-  margin: 0 0 5px 0;
+  margin: 0 0 3px 0;
 }
 .lightbox_content .input_container:after {
   clear: both;
@@ -669,12 +676,12 @@ table.datatable tbody td.functions .function_buttons span {
 
 .lightbox_content .button_container {
   width: auto;
-  height: 35px;
+  height: 30px;
   text-align: right;
-  padding: 5px 0 10px 0;
+//  padding: 5px 0 10px 0;
 }
 .lightbox_content .button_container button {
-  height: 35px;
+  height: 30px;
   display: inline-block;
   background-color: #999;
   font-weight: 700;
@@ -819,3 +826,5 @@ table.datatable tbody td.functions .function_buttons span {
     transform:         rotate(359deg);
   }
 }
+
+</style>

@@ -1,7 +1,7 @@
 $(document).ready(function(){
   
   // On page load: datatable
-  var table_companies = $('#table_companies').dataTable({
+  var table_companies = $('#table_companies').DataTable({
     "dom": '<"header"<"toolbar">f>rt<"bottom"pil><"clear">',
     "ajax": "data.php?job=get_companies<?php echo $addgetvar; ?>",
     "columns": [
