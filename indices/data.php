@@ -152,24 +152,31 @@ $sqlsel_rows = "SELECT $table.id, $fields FROM $table $ljointables $wheres $grou
         $functions .= '<li class="function_delete"><a data-id="' . $row['id'] . '" data-name="' . $row['blank'] . '"><span>Delete</span></a></li>';
 	$functions .= '</ul></div>';
 
-	// import viewtable
-	foreach ($colslist as $col) {
-		if ( $col["multiple"] == "yes" ) {
-			$row[$col["column"]] = str_replace(";", "/", $row[$col["column"]]);
+	// Set each column by row as it comes from the query
+	$k=0;
+	foreach ( $colslist as $i => $col ) {
+		// modify data
+		if ( $col["input_type"] == "select" || $col["input_type"] == "tableselect" ) {
 			foreach ( $lists[$col["column"]] as $lst ) {
 				$row[$col["column"]] = str_replace($lst["key"], $lst["title"], $row[$col["column"]]);
 			}
-		} else {
+			if ( $col["multiple"] == "yes" ) {
+				$row[$col["column"]] = str_replace(";", "/", $row[$col["column"]]);
+			}
+		} elseif ( $col["input_type"] == "checkbox" ) {
+			// set for checkbox == 0 
+			if ( $row[$col["column"]] == 1 ) {
+				$row[$col["column"]] = "<i class=\"fa fa-fw fa-check-square\">";
+			} else {
+				$row[$col["column"]] = "<i class=\"fa fa-fw fa-square\">";
+			}
+		} else { // this is legacy td title from pajm, not going to work here
 			if ( isset($col["colwidth"]) && $col["colwidth"] < strlen($colstring) ) {
 				$titlestring = "title=\"$colstring\"";
 			}
 			unset($titlestring);
 		}
-	}
-	// end import
-
-	$k=0;
-	foreach ( $colslist as $i => $col ) {
+		// set array
 		if ( $k == 0 )
 			$mysql_data[$j] = [ $col["column"] => $row[$col["column"]] ];
 		else
