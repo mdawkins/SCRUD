@@ -16,11 +16,11 @@ $job = '';
 $id  = '';
 if (isset($_GET['job'])){
   $job = $_GET['job'];
-  if ($job == 'get_companies' ||
-      $job == 'get_company'   ||
-      $job == 'add_company'   ||
-      $job == 'edit_company'  ||
-      $job == 'delete_company'){
+  if ($job == 'get_records' ||
+      $job == 'get_record'   ||
+      $job == 'add_record'   ||
+      $job == 'edit_record'  ||
+      $job == 'delete_record'){
     if (isset($_GET['id'])){
       $id = $_GET['id'];
       if (!is_numeric($id)){
@@ -47,7 +47,7 @@ if ($job != ''){
   }
   
   // Execute job
-  if ($job == 'get_companies'){
+  if ($job == 'get_records'){
 // import viewtables query build here
 //Pivot Table join variables
 foreach ( $lists["pivcols"] as $key ) {
@@ -136,7 +136,7 @@ if ( !empty($wheres) && empty($addwheres) ) {
 $sqlsel_rows = "SELECT $table.id, $fields FROM $table $ljointables $wheres $groupby $colorderby";
 // end import 
 
-    // Get companies
+    // Get Records
     $query = $sqlsel_rows;
     $query = mysqli_query($db_connection, $query);
     if (!$query){
@@ -146,10 +146,10 @@ $sqlsel_rows = "SELECT $table.id, $fields FROM $table $ljointables $wheres $grou
       $result  = 'success';
       $message = 'query success';
 	$j=0;
-      while ($company = mysqli_fetch_array($query)){
+      while ($row = mysqli_fetch_array($query)){
         $functions  = '<div class="function_buttons"><ul>';
-        $functions .= '<li class="function_edit"><a data-id="'   . $company['id'] . '" data-name="' . $company['blank'] . '"><span>Edit</span></a></li>';
-        $functions .= '<li class="function_delete"><a data-id="' . $company['id'] . '" data-name="' . $company['blank'] . '"><span>Delete</span></a></li>';
+        $functions .= '<li class="function_edit"><a data-id="'   . $row['id'] . '" data-name="' . $row['blank'] . '"><span>Edit</span></a></li>';
+        $functions .= '<li class="function_delete"><a data-id="' . $row['id'] . '" data-name="' . $row['blank'] . '"><span>Delete</span></a></li>';
 	$functions .= '</ul></div>';
 
 	// import viewtable
@@ -171,9 +171,9 @@ $sqlsel_rows = "SELECT $table.id, $fields FROM $table $ljointables $wheres $grou
 	$k=0;
 	foreach ( $colslist as $i => $col ) {
 		if ( $k == 0 )
-			$mysql_data[$j] = [ $col["column"] => $company[$col["column"]] ];
+			$mysql_data[$j] = [ $col["column"] => $row[$col["column"]] ];
 		else
-			$mysql_data[$j] = array_merge($mysql_data[$j], [ $col["column"] => $company[$col["column"]] ]);
+			$mysql_data[$j] = array_merge($mysql_data[$j], [ $col["column"] => $row[$col["column"]] ]);
 		$k++;
 	}
 	$mysql_data[$j] = array_merge($mysql_data[$j], [ "functions" => $functions ]);
@@ -181,9 +181,9 @@ $sqlsel_rows = "SELECT $table.id, $fields FROM $table $ljointables $wheres $grou
       }
     }
     
-  } elseif ($job == 'get_company'){
+  } elseif ($job == 'get_record'){
     
-    // Get company
+    // Get Record
     if ($id == ''){
       $result  = 'error';
       $message = 'id missing';
@@ -197,14 +197,14 @@ $sqlsel_rows = "SELECT $table.id, $fields FROM $table $ljointables $wheres $grou
         $result  = 'success';
         $message = 'query success';
 	$j=0;
-	while ($company = mysqli_fetch_array($query)){
+	while ($row = mysqli_fetch_array($query)){
 		$k=0;
 		foreach ( $colslist as $i => $col ) {
-			$mysql_data[] = [ $col["column"] => $company[$col["column"]] ];
+			$mysql_data[] = [ $col["column"] => $row[$col["column"]] ];
 			if ( $k == 0 )
-				$mysql_data[$j] = [ $col["column"] => $company[$col["column"]] ];
+				$mysql_data[$j] = [ $col["column"] => $row[$col["column"]] ];
 			else
-				$mysql_data[$j] = array_merge($mysql_data[$j], [ $col["column"] => $company[$col["column"]] ]);
+				$mysql_data[$j] = array_merge($mysql_data[$j], [ $col["column"] => $row[$col["column"]] ]);
 			$k++;
 		}
 		$j++;
@@ -212,9 +212,9 @@ $sqlsel_rows = "SELECT $table.id, $fields FROM $table $ljointables $wheres $grou
       }
     }
   
-  } elseif ($job == 'add_company'){
+  } elseif ($job == 'add_record'){
     
-    // Add company
+    // Add Record
     $query = "INSERT INTO $table SET ";
 	foreach ( $colslist as $i => $col ) {
 		if (isset($_GET[$col["column"]]))	{ $query .= $col["column"]." = '". mysqli_real_escape_string($db_connection, $_GET[$col["column"]]). "', "; }
@@ -229,9 +229,9 @@ $sqlsel_rows = "SELECT $table.id, $fields FROM $table $ljointables $wheres $grou
       $message = 'query success';
     }
   
-  } elseif ($job == 'edit_company'){
+  } elseif ($job == 'edit_record'){
     
-    // Edit company
+    // Edit Record
     if ($id == ''){
       $result  = 'error';
       $message = 'id missing';
@@ -257,9 +257,9 @@ $sqlsel_rows = "SELECT $table.id, $fields FROM $table $ljointables $wheres $grou
       }
     }
     
-  } elseif ($job == 'delete_company'){
+  } elseif ($job == 'delete_record'){
   
-    // Delete company
+    // Delete Record
     if ($id == ''){
       $result  = 'error';
       $message = 'id missing';

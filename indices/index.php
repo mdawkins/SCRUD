@@ -65,7 +65,7 @@ function closeNav() {
     </div>
 
     <div id="page_container">
-      <table class="datatable" id="table_companies">
+      <table class="datatable" id="table_records">
         <thead>
 	  <tr>
 <?php
@@ -89,7 +89,7 @@ foreach ( $colslist as $i => $col ) {
       <div class="lightbox_content">
         
         <h2>##blank##</h2>
-	<form class="form add" id="form_company" data-id="" novalidate>
+	<form class="form add" id="form_record" data-id="" novalidate>
 <?php
 foreach ( $colslist as $i => $col ) {
 	if ( $col["input_type"] != "noform" ) {

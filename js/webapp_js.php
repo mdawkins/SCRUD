@@ -1,9 +1,12 @@
 $(document).ready(function(){
   
   // On page load: datatable
-  var table_companies = $('#table_companies').DataTable({
+  var maintable = $('#table_records').DataTable({
+    "scrollX": true,
+    "scrollY": "72vh",
+    "scrollCollapse": true,
     "dom": '<"header"<"toolbar">f>rt<"bottom"pil><"clear">',
-    "ajax": "data.php?job=get_companies<?php echo $addgetvar; ?>",
+    "ajax": "data.php?job=get_records<?php echo $addgetvar; ?>",
     "columns": [
 <?php
 foreach ( $colslist as $i => $col ) {
@@ -11,6 +14,8 @@ foreach ( $colslist as $i => $col ) {
 		$sClassstring = ', "sClass": "truncate"';
 	} elseif ( $col["input_type"] == "currency" ) {
 		$sClassstring = ', "sClass": "integer"';
+	} elseif ( $col["hidecol"] == "yes" ) {
+		$sClassstring =', "visible": false,';
 	}
 	echo "\t{ \"data\": \"".$col["column"]."\"$sClassstring },\n";
 	unset($sClassstring);
@@ -34,7 +39,7 @@ foreach ( $colslist as $i => $col ) {
       "sInfoFiltered":  "(filtered from _MAX_ total records)"
     }
   });
-  $("div.toolbar").html('<button type="button" class="button" id="add_company">Add Record</button>'); 
+  $("div.toolbar").html('<button type="button" class="button" id="add_record">Add Record</button>'); 
 
   // On page load: form validation
   jQuery.validator.setDefaults({
@@ -56,8 +61,8 @@ foreach ( $colslist as $i => $col ) {
       $(element).parent('.field_container').addClass('valid').removeClass('error');
     }
   });
-  var form_company = $('#form_company');
-  form_company.validate();
+  var recordform = $('#form_record');
+  recordform.validate();
 
   // Show message
   function show_message(message_text, message_type){
@@ -116,39 +121,39 @@ foreach ( $colslist as $i => $col ) {
     $('input').blur();
   }
 
-  // Add company button
-  $(document).on('click', '#add_company', function(e){
+  // Add Record button
+  $(document).on('click', '#add_record', function(e){
     e.preventDefault();
     $('.lightbox_content h2').text('Add Record');
-    $('#form_company button').text('Add Record');
-    $('#form_company').attr('class', 'form add');
-    $('#form_company').attr('data-id', '');
-    $('#form_company .field_container label.error').hide();
-    $('#form_company .field_container').removeClass('valid').removeClass('error');
+    $('#form_record button').text('Add Record');
+    $('#form_record').attr('class', 'form add');
+    $('#form_record').attr('data-id', '');
+    $('#form_record .field_container label.error').hide();
+    $('#form_record .field_container').removeClass('valid').removeClass('error');
 <?php
 foreach ( $colslist as $i => $col ) {
 	if ( $col["multiple"] == "yes" ) {
 		// an array needs to be handled here
-		echo "\t$('#form_company #".$col["column"]."').val();\n";
+		echo "\t$('#form_record #".$col["column"]."').val();\n";
 	} else
-		echo "\t$('#form_company #".$col["column"]."').val('');\n";
+		echo "\t$('#form_record #".$col["column"]."').val('');\n";
 }
 ?>
     show_lightbox();
   });
 
-  // Add company submit form
-  $(document).on('submit', '#form_company.add', function(e){
+  // Add Record submit form
+  $(document).on('submit', '#form_record.add', function(e){
     e.preventDefault();
     // Validate form
-    if (form_company.valid() == true){
-      // Send company information to database
+    if (recordform.valid() == true){
+      // Send Record information to database
       hide_ipad_keyboard();
       hide_lightbox();
       show_loading_message();
-      var form_data = $('#form_company').serialize();
+      var form_data = $('#form_record').serialize();
       var request   = $.ajax({
-      url:          'data.php?job=add_company<?php echo $addgetvar; ?>',
+      url:          'data.php?job=add_record<?php echo $addgetvar; ?>',
         cache:        false,
         data:         form_data,
         dataType:     'json',
@@ -158,7 +163,7 @@ foreach ( $colslist as $i => $col ) {
       request.done(function(output){
         if (output.result == 'success'){
           // Reload datable
-          table_companies.api().ajax.reload(function(){
+          maintable.api().ajax.reload(function(){
             hide_loading_message();
             var record_name = $('#blank').val();
             show_message("Record '" + record_name + "' added successfully.", 'success');
@@ -175,14 +180,14 @@ foreach ( $colslist as $i => $col ) {
     }
   });
 
-  // Edit company button
+  // Edit Record button
   $(document).on('click', '.function_edit a', function(e){
     e.preventDefault();
-    // Get company information from database
+    // Get Record information from database
     show_loading_message();
     var id      = $(this).data('id');
     var request = $.ajax({
-      url:          'data.php?job=get_company<?php echo $addgetvar; ?>',
+      url:          'data.php?job=get_record<?php echo $addgetvar; ?>',
       cache:        false,
       data:         'id=' + id,
       dataType:     'json',
@@ -192,20 +197,20 @@ foreach ( $colslist as $i => $col ) {
     request.done(function(output){
       if (output.result == 'success'){
         $('.lightbox_content h2').text('Edit Record');
-        $('#form_company button').text('Update Record');
-        $('#form_company').attr('class', 'form edit');
-        $('#form_company').attr('data-id', id);
-        $('#form_company .field_container label.error').hide();
-        $('#form_company .field_container').removeClass('valid').removeClass('error');
+        $('#form_record button').text('Update Record');
+        $('#form_record').attr('class', 'form edit');
+        $('#form_record').attr('data-id', id);
+        $('#form_record .field_container label.error').hide();
+        $('#form_record .field_container').removeClass('valid').removeClass('error');
 <?php
 foreach ( $colslist as $i => $col ) {
 	if ( $col["multiple"] == "yes" ) {
 		// an array needs to be handled here
-		echo "\t$('#form_company #".$col["column"]."').val(output.data[0].".$col["column"].");\n";
+		echo "\t$('#form_record #".$col["column"]."').val(output.data[0].".$col["column"].");\n";
 	} elseif ( $col["input_type"] == "checkbox" ) {
-		echo "\t$('#form_company #".$col["column"]."').prop('checked', ( output.data[0].".$col["column"]." == 1 ) );\n";
+		echo "\t$('#form_record #".$col["column"]."').prop('checked', ( output.data[0].".$col["column"]." == 1 ) );\n";
 	} else
-		echo "\t$('#form_company #".$col["column"]."').val(output.data[0].".$col["column"].");\n";
+		echo "\t$('#form_record #".$col["column"]."').val(output.data[0].".$col["column"].");\n";
 }
 ?>
         hide_loading_message();
@@ -221,19 +226,19 @@ foreach ( $colslist as $i => $col ) {
     });
   });
   
-  // Edit company submit form
-  $(document).on('submit', '#form_company.edit', function(e){
+  // Edit Record submit form
+  $(document).on('submit', '#form_record.edit', function(e){
     e.preventDefault();
     // Validate form
-    if (form_company.valid() == true){
-      // Send company information to database
+    if (recordform.valid() == true){
+      // Send Record information to database
       hide_ipad_keyboard();
       hide_lightbox();
       show_loading_message();
-      var id        = $('#form_company').attr('data-id');
-      var form_data = $('#form_company').serialize();
+      var id        = $('#form_record').attr('data-id');
+      var form_data = $('#form_record').serialize();
       var request   = $.ajax({
-	url:          'data.php?job=edit_company<?php echo $addgetvar; ?>&id=' + id,
+	url:          'data.php?job=edit_record<?php echo $addgetvar; ?>&id=' + id,
         cache:        false,
         data:         form_data,
         dataType:     'json',
@@ -243,7 +248,7 @@ foreach ( $colslist as $i => $col ) {
       request.done(function(output){
         if (output.result == 'success'){
           // Reload datable
-          table_companies.api().ajax.reload(function(){
+          maintable.api().ajax.reload(function(){
             hide_loading_message();
             var record_name = $('#blank').val();
             show_message("Record '" + record_name + "' edited successfully.", 'success');
@@ -260,7 +265,7 @@ foreach ( $colslist as $i => $col ) {
     }
   });
   
-  // Delete company
+  // Delete Record
   $(document).on('click', '.function_delete a', function(e){
     e.preventDefault();
     var record_name = $(this).data('name');
@@ -268,7 +273,7 @@ foreach ( $colslist as $i => $col ) {
       show_loading_message();
       var id      = $(this).data('id');
       var request = $.ajax({
-	url:          'data.php?job=delete_company&<?php echo $addgetvar; ?>id=' + id,
+	url:          'data.php?job=delete_record&<?php echo $addgetvar; ?>id=' + id,
         cache:        false,
         dataType:     'json',
         contentType:  'application/json; charset=utf-8',
@@ -277,7 +282,7 @@ foreach ( $colslist as $i => $col ) {
       request.done(function(output){
         if (output.result == 'success'){
           // Reload datable
-          table_companies.api().ajax.reload(function(){
+          maintable.api().ajax.reload(function(){
             hide_loading_message();
             show_message("Record '" + record_name + "' deleted successfully.", 'success');
           }, true);
