@@ -1,6 +1,7 @@
 <?php
 # server config
 require_once "dbconnection.php";
+$conn = db_connect($servername, $username, $password, $database);
 
 // create array for creating select dropdown list
 foreach ( $selslist as $sel ) {
@@ -15,11 +16,11 @@ foreach ( $selslist as $sel ) {
 		//$sqlsel_rows = "select * from ".$sel["seltable"].$wherestring;
 		$sqlsel_rows = "select ".$sel["selid"].", ".$sel["selname"]." from ".$sel["seltable"].$wherestring." ORDER BY ".$sel["selname"];
 		//echo $sqlsel_rows."<br>";
-		$result = $conn->query($sqlsel_rows);
-		if ($result->num_rows > 0) {
+		$result = db_query($sqlsel_rows);
+		if ( db_num_rows($result) > 0) {
 		// output data of each row
 			$i=0;
-			while($row = $result->fetch_assoc()) {
+			while ( $row = db_fetch_assoc($result) ) {
 				//$name[$i] = [ [ "key" => $row[$sel["selid"]], "title" => $row[$sel["selname"]] ] ];
 				$name[$i] = [ [ "key" => $row["id"], "title" => $row[$sel["selname"]] ] ];
 				//echo $row[$sel["selid"]].":".$row[$sel["selname"]].";";
@@ -31,4 +32,8 @@ foreach ( $selslist as $sel ) {
 		unset($wherestring);
 	}
 }
+
+// Close database connection
+db_close($conn);
+
 ?>
