@@ -273,7 +273,7 @@ foreach ( $colslist as $i => $col ) {
       show_loading_message();
       var id      = $(this).data('id');
       var request = $.ajax({
-	url:          'data.php?job=delete_record&<?php echo $addgetvar; ?>id=' + id,
+	url:          'data.php?job=delete_record<?php echo $addgetvar; ?>&id=' + id,
         cache:        false,
         dataType:     'json',
         contentType:  'application/json; charset=utf-8',

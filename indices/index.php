@@ -19,7 +19,7 @@ if ( isset($_GET["page"]) ) {
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Oxygen:400,700">
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-<?php include_once "$pajmroot/css/layout.css"; ?>
+<?php include_once "$approot/css/layout.css"; ?>
     <script charset="utf-8" src="//code.jquery.com/jquery-3.3.1.js"></script>
     <script charset="utf-8" src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
     <script charset="utf-8" src="//cdn.jsdelivr.net/jquery.validation/1.13.1/jquery.validate.min.js"></script>
@@ -43,7 +43,7 @@ function closeNav() {
   document.getElementById("myNav").style.width = "0%";
 }
     </script>
-    <script><?php if ( !empty($_GET["page"]) ) { require_once "$pajmroot/js/webapp_js.php"; } ?></script>
+    <script><?php if ( !empty($_GET["page"]) ) { require_once "$approot/js/webapp_js.php"; } ?></script>
   </head>
   <body>
     <!-- top menu bar --!>
