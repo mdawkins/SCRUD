@@ -1,5 +1,5 @@
 <?php
-//require_once "fundsmap_conf.inc";
+
 if ( isset($_GET["page"]) ) {
 	require_once "pages/".$_GET["page"].".php";
 	$addgetvar = "&page=".$_GET["page"];
@@ -43,7 +43,7 @@ function closeNav() {
   document.getElementById("myNav").style.width = "0%";
 }
     </script>
-    <script><?php require_once "$pajmroot/js/webapp_js.php"; ?></script>
+    <script><?php if ( !empty($_GET["page"]) ) { require_once "$pajmroot/js/webapp_js.php"; } ?></script>
   </head>
   <body>
     <!-- top menu bar --!>
@@ -69,11 +69,13 @@ function closeNav() {
         <thead>
 	  <tr>
 <?php
-foreach ( $colslist as $i => $col ) {
-	echo "<th>".$col["title"]."</th>\n";
+if ( !empty($_GET["page"]) ) {
+	foreach ( $colslist as $i => $col ) {
+		echo "<th>".$col["title"]."</th>\n";
+	}
+	echo "<th>Functions</th>";
 }
 ?>
-	    <th>Functions</th>
           </tr>
         </thead>
         <tbody>
