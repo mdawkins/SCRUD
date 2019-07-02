@@ -1,53 +1,52 @@
 <?php
-if ( isset($_GET["page"]) ) {
+if ( !empty($_GET["page"]) ) {
 	require_once "pages/".$_GET["page"].".php";
 	if( isset($colorderby) ) {
 		$colorderby = "ORDER BY ".str_replace("::", " ", $colorderby);
 	}
-}
 
 // Database details
 require_once ".serv.conf";
+require_once "$funcroot/dbconnection.php";
 #require_once ".dbconfig";
 
-
 // Get job (and id)
-$job = '';
-$id  = '';
-if (isset($_GET['job'])){
-  $job = $_GET['job'];
-  if ($job == 'get_records' ||
-      $job == 'get_record'   ||
-      $job == 'add_record'   ||
-      $job == 'edit_record'  ||
-      $job == 'delete_record'){
-    if (isset($_GET['id'])){
-      $id = $_GET['id'];
-      if (!is_numeric($id)){
-        $id = '';
+$job = "";
+$id  = "";
+if ( isset($_GET["job"]) ) {
+  $job = $_GET["job"];
+  if ($job == "get_records" ||
+      $job == "get_record"   ||
+      $job == "add_record"   ||
+      $job == "edit_record"  ||
+      $job == "delete_record") {
+    if ( isset($_GET["id"]) ) {
+      $id = $_GET["id"];
+      if ( !is_numeric($id) ) {
+        $id = "";
       }
     }
   } else {
-    $job = '';
+    $job = "";
   }
 }
 
 // Prepare array
-$mysql_data = array();
+$query_data = array();
 
 // Valid job found
-if ($job != ''){
+if ( $job != "" ) {
   
   // Connect to database
-  $db_connection = mysqli_connect($servername, $username, $password, $database);
-  if (mysqli_connect_errno()){
-    $result  = 'error';
-    $message = 'Failed to connect to database: ' . mysqli_connect_error();
-    $job     = '';
+  $conn = db_connect($servername, $username, $password, $database);
+  if ( $result == "error" ) {
+    //$result  = "error";
+    $message = "Failed to connect to database: ".mysqli_connect_error();
+    $job     = "";
   }
   
   // Execute job
-  if ($job == 'get_records'){
+  if ( $job == "get_records" ){
 // import viewtables query build here
 //Pivot Table join variables
 foreach ( $lists["pivcols"] as $key ) {
@@ -80,7 +79,7 @@ foreach ( $colslist as $i => $col ) {
 				}
 			}
 		} 
-	} elseif ( $col["input_type"] == "pivotjoin" )  {
+	} elseif ( $col["input_type"] == "pivotjoin" ) {
 		$fields .= "`".$col["column"]."`, ";
 		$ljointables .= "LEFT JOIN\n\t(SELECT $pivkey, GROUP_CONCAT(DISTINCT(CASE WHEN $joinkey = '".$col["key"]."' THEN $keyname END) ORDER BY 1 SEPARATOR ', ') AS '".$col["column"]."' FROM $jointable WHERE $joinwherekey = $joinwhereval AND $joinkey = '".$col["key"]."' GROUP BY $pivkey) AS t".$i." ON $table.id=t$i.$pivkey\n";
 
@@ -88,13 +87,13 @@ foreach ( $colslist as $i => $col ) {
 		$fields .= $col["colfunc"]." AS ".str_replace("%T%", "t$i", $col["column"]).",";
 	} elseif ( !empty($col["concatval"]) ) {
 		$fields .= $col["concatval"]." AS ".str_replace("%T%", "t$i", $col["column"]).",";
-	} elseif ( $col["input_type"] == "currency" )  {
+	} elseif ( $col["input_type"] == "currency" ) {
 		$tablecolname = "$table.".$col["column"];
 		$fields .= "IF($tablecolname IS NULL OR $tablecolname = '0', '--', concat('$',format($tablecolname, 2))) AS ".$col["column"].",";
-	} elseif ( $col["input_type"] == "date" )  {
+	} elseif ( $col["input_type"] == "date" ) {
 		$tablecolname = "$table.".$col["column"];
 		$fields .= "IF($tablecolname IS NULL OR $tablecolname = '0000-00-00', '--', date_format($tablecolname, '%m/%d/%Y')) AS ".$col["column"].",";
-	} elseif ( $col["input_type"] == "datetime" )  {
+	} elseif ( $col["input_type"] == "datetime" ) {
 		$tablecolname = "$table.".$col["column"];
 		$fields .= "IF($tablecolname IS NULL OR $tablecolname = '0000-00-00 00:00:00', '--', date_format($tablecolname, '%m/%d/%Y %r')) AS ".$col["column"].",";
 	} else {
@@ -138,18 +137,18 @@ $sqlsel_rows = "SELECT $table.id, $fields FROM $table $ljointables $wheres $grou
 
     // Get Records
     $query = $sqlsel_rows;
-    $query = mysqli_query($db_connection, $query);
-    if (!$query){
-      $result  = 'error';
-      $message = 'query error';
+    $query = db_query($query);
+    if (!$query) {
+      $result  = "error";
+      $message = "query error";
     } else {
-      $result  = 'success';
-      $message = 'query success';
+      $result  = "success";
+      $message = "query success";
 	$j=0;
-      while ($row = mysqli_fetch_array($query)){
+      while ( $row = db_fetch_assoc($query) ) {
         $functions  = '<div class="function_buttons"><ul>';
-        $functions .= '<li class="function_edit"><a data-id="'   . $row['id'] . '" data-name="' . $row['blank'] . '"><span>Edit</span></a></li>';
-        $functions .= '<li class="function_delete"><a data-id="' . $row['id'] . '" data-name="' . $row['blank'] . '"><span>Delete</span></a></li>';
+        $functions .= '<li class="function_edit"><a data-id="'.$row["id"].'" data-name="'.$row["blank"].'"><span>Edit</span></a></li>';
+        $functions .= '<li class="function_delete"><a data-id="'.$row["id"].'" data-name="'.$row["blank"].'"><span>Delete</span></a></li>';
 	$functions .= '</ul></div>';
 
 	// Set each column by row as it comes from the query
@@ -164,7 +163,6 @@ $sqlsel_rows = "SELECT $table.id, $fields FROM $table $ljointables $wheres $grou
 				$row[$col["column"]] = str_replace(";", "/", $row[$col["column"]]);
 			}
 		} elseif ( $col["input_type"] == "checkbox" ) {
-			// set for checkbox == 0 
 			if ( $row[$col["column"]] == 1 ) {
 				$row[$col["column"]] = "<i class=\"fa fa-fw fa-check-square\">";
 			} else {
@@ -178,40 +176,40 @@ $sqlsel_rows = "SELECT $table.id, $fields FROM $table $ljointables $wheres $grou
 		}
 		// set array
 		if ( $k == 0 )
-			$mysql_data[$j] = [ $col["column"] => $row[$col["column"]] ];
+			$query_data[$j] = [ $col["column"] => $row[$col["column"]] ];
 		else
-			$mysql_data[$j] = array_merge($mysql_data[$j], [ $col["column"] => $row[$col["column"]] ]);
+			$query_data[$j] = array_merge($query_data[$j], [ $col["column"] => $row[$col["column"]] ]);
 		$k++;
 	}
-	$mysql_data[$j] = array_merge($mysql_data[$j], [ "functions" => $functions ]);
+	$query_data[$j] = array_merge($query_data[$j], [ "functions" => $functions ]);
 	$j++;
       }
     }
     
-  } elseif ($job == 'get_record'){
+  } elseif ( $job == "get_record" ) {
     
     // Get Record
-    if ($id == ''){
-      $result  = 'error';
-      $message = 'id missing';
+    if ( $id == "" ) {
+      $result  = "error";
+      $message = "id missing";
     } else {
-      $query = "SELECT * FROM $table WHERE id = '" . mysqli_real_escape_string($db_connection, $id) . "'";
-      $query = mysqli_query($db_connection, $query);
-      if (!$query){
-        $result  = 'error';
-        $message = 'query error';
+      $query = "SELECT * FROM $table WHERE id = '".addslashes($id)."'";
+      $query = db_query($query);
+      if ( !$query ) {
+        $result  = "error";
+        $message = "query error";
       } else {
-        $result  = 'success';
-        $message = 'query success';
+        $result  = "success";
+        $message = "query success";
 	$j=0;
-	while ($row = mysqli_fetch_array($query)){
+	while ( $row = db_fetch_assoc($query) ) {
 		$k=0;
 		foreach ( $colslist as $i => $col ) {
-			$mysql_data[] = [ $col["column"] => $row[$col["column"]] ];
+			$query_data[] = [ $col["column"] => $row[$col["column"]] ];
 			if ( $k == 0 )
-				$mysql_data[$j] = [ $col["column"] => $row[$col["column"]] ];
+				$query_data[$j] = [ $col["column"] => $row[$col["column"]] ];
 			else
-				$mysql_data[$j] = array_merge($mysql_data[$j], [ $col["column"] => $row[$col["column"]] ]);
+				$query_data[$j] = array_merge($query_data[$j], [ $col["column"] => $row[$col["column"]] ]);
 			$k++;
 		}
 		$j++;
@@ -219,74 +217,72 @@ $sqlsel_rows = "SELECT $table.id, $fields FROM $table $ljointables $wheres $grou
       }
     }
   
-  } elseif ($job == 'add_record'){
+  } elseif ( $job == "add_record" ) {
     
     // Add Record
     $query = "INSERT INTO $table SET ";
 	foreach ( $colslist as $i => $col ) {
-		if (isset($_GET[$col["column"]]))	{ $query .= $col["column"]." = '". mysqli_real_escape_string($db_connection, $_GET[$col["column"]]). "', "; }
+		if (isset($_GET[$col["column"]]))	{ $query .= $col["column"]." = '".addslashes($_GET[$col["column"]])."', "; }
 	}
     	$query = rtrim($query, ', ');
-    $query = mysqli_query($db_connection, $query);
-    if (!$query){
-      $result  = 'error';
-      $message = 'query error';
+    $query = db_query($query);
+    if ( !$query ) {
+      $result  = "error";
+      $message = "query error";
     } else {
-      $result  = 'success';
-      $message = 'query success';
+      $result  = "success";
+      $message = "query success";
     }
   
-  } elseif ($job == 'edit_record'){
+  } elseif ( $job == "edit_record" ){
     
     // Edit Record
-    if ($id == ''){
-      $result  = 'error';
-      $message = 'id missing';
+    if ( $id == "" ) {
+      $result  = "error";
+      $message = "id missing";
     } else {
       $query = "UPDATE $table SET ";
 	foreach ( $colslist as $i => $col ) {
-		if (isset($_GET[$col["column"]])) {
-			$query .= $col["column"]." = '". mysqli_real_escape_string($db_connection, $_GET[$col["column"]]). "', ";
+		if ( isset($_GET[$col["column"]]) ) {
+			$query .= $col["column"]." = '".addslashes($_GET[$col["column"]])."', ";
 		} elseif ( !isset($_GET[$col["column"]]) && $col["input_type"] == "checkbox" ) {
 
 			$query .= $col["column"]." = '0', ";
 		}
 	}
     	$query = rtrim($query, ', ');
-      $query .= "WHERE id = '" . mysqli_real_escape_string($db_connection, $id) . "'";
-      $query  = mysqli_query($db_connection, $query);
-      if (!$query){
-        $result  = 'error';
-        $message = 'query error';
+      $query .= "WHERE id = '".addslashes($id)."'";
+      $query  = db_query($query);
+      if ( !$query ) {
+        $result  = "error";
+        $message = "query error";
       } else {
-        $result  = 'success';
-        $message = 'query success';
+        $result  = "success";
+        $message = "query success";
       }
     }
     
-  } elseif ($job == 'delete_record'){
+  } elseif ( $job == "delete_record" ) {
   
     // Delete Record
-    if ($id == ''){
-      $result  = 'error';
-      $message = 'id missing';
+    if ( $id == "" ) {
+      $result  = "error";
+      $message = "id missing";
     } else {
-      $query = "DELETE FROM $table WHERE id = '" . mysqli_real_escape_string($db_connection, $id) . "'";
-      $query = mysqli_query($db_connection, $query);
-      if (!$query){
-        $result  = 'error';
-        $message = 'query error';
+      $query = "DELETE FROM $table WHERE id = '".addslashes($id)."'";
+      $query = db_query($query);
+      if ( !$query ) {
+        $result  = "error";
+        $message = "query error";
       } else {
-        $result  = 'success';
-        $message = 'query success';
+        $result  = "success";
+        $message = "query success";
       }
     }
-  
   }
   
   // Close database connection
-  mysqli_close($db_connection);
-
+  db_close($conn);
 }
 
 // Prepare data
@@ -294,10 +290,12 @@ $data = array(
   "sql"     => $sqlsel_rows,
   "result"  => $result,
   "message" => $message,
-  "data"    => $mysql_data,
+  "data"    => $query_data,
 );
 
 // Convert PHP array to JSON array
 $json_data = json_encode($data);
 print $json_data;
+
+}
 ?>
