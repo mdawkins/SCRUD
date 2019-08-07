@@ -17,13 +17,33 @@ if ( isset($_GET["page"]) ) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=1000, initial-scale=1">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.min.css">
+<!--    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.18/css/dataTables.jqueryui.min.css"> --!>
+    <link rel="stylesheet" href="//cdn.datatables.net/colreorder/1.5.1/css/colReorder.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/3.2.5/css/fixedColumns.jqueryui.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/fixedheader/3.1.4/css/fixedHeader.jqueryui.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.2/css/responsive.jqueryui.min.css">
+<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/yadcf/0.9.3/jquery.dataTables.yadcf.min.css"> --!>
+    <link rel="stylesheet" href="/css/jquery.dataTables.yadcf.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.8/css/select2.min.css">
+    
+<?php include_once "$approot/css/layout.css"; ?>
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Oxygen:400,700">
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-<?php include_once "$approot/css/layout.css"; ?>
-    <script charset="utf-8" src="//code.jquery.com/jquery-3.3.1.js"></script>
-    <script charset="utf-8" src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
+
+    <script charset="utf-8" src="//code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script charset="utf-8" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
     <script charset="utf-8" src="//cdn.jsdelivr.net/jquery.validation/1.13.1/jquery.validate.min.js"></script>
+    <script charset="utf-8" src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <script charset="utf-8" src="//cdn.datatables.net/colreorder/1.5.1/js/dataTables.colReorder.min.js"></script>
+    <script charset="utf-8" src="//cdn.datatables.net/fixedcolumns/3.2.6/js/dataTables.fixedColumns.min.js"></script>
     <script charset="utf-8" src="//cdn.datatables.net/fixedheader/3.1.5/js/dataTables.fixedHeader.min.js"></script>
+<!--<script charset="utf-8" src="https://cdn.datatables.net/responsive/2.2.2/js/dataTables.responsive.min.js"></script> --!>
+<!--<script charset="utf-8" src="https://cdn.datatables.net/responsive/2.2.2/js/responsive.jqueryui.min.js"></script> --!>
+<!--    <script charset="utf-8" src="https://cdnjs.cloudflare.com/ajax/libs/yadcf/0.9.3/jquery.dataTables.yadcf.min.js"></script> --!>
+    <script charset="utf-8" src="/js/jquery.dataTables.yadcf.js"></script>
+    <script charset="utf-8" src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.8/js/select2.min.js"></script>
     <script>
 /* Toggle between adding and removing the "responsive" class to topnav when the user clicks on the icon */
 function myFunction() {
@@ -74,6 +94,16 @@ if ( !empty($_GET["page"]) ) {
 		echo "<th>".$col["title"]."</th>\n";
 	}
 	echo "<th>Functions</th>";
+	echo "</tr>\n<tr>\n";
+	foreach ( $colslist as $i => $col ) {
+		echo "<th class=\"filter_content\"></th>";
+	}
+	echo "<th>\n";
+	echo "<div class=\"topfunc_buttons\"><ul>\n";
+	echo "<li id=\"reset\" class=\"function_reordercols\"><a><span>Reorder</span></a></li>\n";
+	echo "<li id=\"add_record\" class=\"function_addrecord\"><a><span>Add</span></a></li>\n";
+	echo "</ul></div>\n";
+	echo "</th>\n";
 }
 ?>
           </tr>

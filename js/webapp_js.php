@@ -1,11 +1,16 @@
 $(document).ready(function(){
-  
+  'use strict';
+
   // On page load: datatable
   var maintable = $('#table_records').DataTable({
-    "scrollX": true,
-    "scrollY": "72vh",
-    "scrollCollapse": true,
-    "dom": '<"header"<"toolbar">f>rt<"bottom"pil><"clear">',
+    "bStateSave": true, // Save the state of the page at reload
+    "scrollX": true, // Horizontal Scroll in window
+    "scrollY": "72vh", // Vertical Height (72) in window
+    "scrollCollapse": true, // Allows thead row to stay at top while scrolling
+    "orderCellsTop": true, // Only allow sorting from top thead row
+    "colReorder": {fixedColumnsRight: 1}, // Drap N Drop Columns
+    //"fixedColumns": {leftColumns: 0, rightColumns: 1}, // Fix Column in place ie Freeze View
+    "dom": 'rt<"bottom"pil><"clear">',
     "ajax": "data.php?job=get_records<?php echo $addgetvar; ?>",
     "columns": [
 <?php
@@ -39,7 +44,35 @@ foreach ( $colslist as $i => $col ) {
       "sInfoFiltered":  "(filtered from _MAX_ total records)"
     }
   });
-  $("div.toolbar").html('<button type="button" class="button" id="add_record">Add Record</button>'); 
+
+  yadcf.init(maintable, [
+<?php
+$f = $linepresent = 0;
+$rowcnt = count($colslist);
+foreach ( $colslist as $i => $col ) {
+	if ( $linepresent == 1 && !empty($col["filterbox"]) ) {
+		echo ",\n";
+	}
+	if ( $col["filterbox"] == "checkbox" ) {
+		echo "    { column_number: $f, filter_type: \"multi_select\", select_type: \"select2\" }";
+		$linepresent = 1;
+	} elseif ( $col["filterbox"] == "text" ) {
+		echo "    { column_number: $f, filter_type: \"text\" }";
+//		echo "    { column_number: $f, filter_type: \"auto_complete\", select_type_options: {width: '200px'} }";
+		$linepresent = 1;
+//	} elseif ( !empty($col["filterbox"]) && $col["input_type"] == "checkbox" ) {
+//		echo "    { column_number: $f, data: ['Yes', 'No'], filter_default_label: 'Select Yes/No', select_type_options: {width: '200px'} }";
+//		$linepresent = 1;
+	} elseif ( !empty($col["filterbox"]) && $col["input_type"] == "date" ) {
+		echo "    { column_number: $f, filter_type: \"range_date\", date_format: \"mm/dd/yyyy\", filter_delay: 500 }";
+		$linepresent = 1;
+	}
+	$f++;
+}
+?>
+   ],
+   { filters_tr_index: 1, cumulative_filtering: true }
+  );
 
   // On page load: form validation
   jQuery.validator.setDefaults({
@@ -121,6 +154,12 @@ foreach ( $colslist as $i => $col ) {
     $('input').blur();
   }
 
+  // Reset Column Order
+  $('#reset').click(function(e){
+    e.preventDefault();
+    maintable.colReorder.reset();
+  });
+
   // Add Record button
   $(document).on('click', '#add_record', function(e){
     e.preventDefault();
@@ -133,7 +172,7 @@ foreach ( $colslist as $i => $col ) {
 <?php
 foreach ( $colslist as $i => $col ) {
 	if ( $col["multiple"] == "yes" ) {
-		// an array needs to be handled here
+		// an array needs to be handled here -- arrayName.join(delimiter)
 		echo "\t$('#form_record #".$col["column"]."').val();\n";
 	} else
 		echo "\t$('#form_record #".$col["column"]."').val('');\n";
@@ -163,7 +202,7 @@ foreach ( $colslist as $i => $col ) {
       request.done(function(output){
         if (output.result == 'success'){
           // Reload datable
-          maintable.api().ajax.reload(function(){
+          maintable.ajax.reload(function(){
             hide_loading_message();
             var record_name = $('#blank').val();
             show_message("Record '" + record_name + "' added successfully.", 'success');
@@ -205,7 +244,7 @@ foreach ( $colslist as $i => $col ) {
 <?php
 foreach ( $colslist as $i => $col ) {
 	if ( $col["multiple"] == "yes" ) {
-		// an array needs to be handled here
+		// an array needs to be handled here -- string.split(separator, limit
 		echo "\t$('#form_record #".$col["column"]."').val(output.data[0].".$col["column"].");\n";
 	} elseif ( $col["input_type"] == "checkbox" ) {
 		echo "\t$('#form_record #".$col["column"]."').prop('checked', ( output.data[0].".$col["column"]." == 1 ) );\n";
@@ -248,7 +287,7 @@ foreach ( $colslist as $i => $col ) {
       request.done(function(output){
         if (output.result == 'success'){
           // Reload datable
-          maintable.api().ajax.reload(function(){
+          maintable.ajax.reload(function(){
             hide_loading_message();
             var record_name = $('#blank').val();
             show_message("Record '" + record_name + "' edited successfully.", 'success');
@@ -282,7 +321,7 @@ foreach ( $colslist as $i => $col ) {
       request.done(function(output){
         if (output.result == 'success'){
           // Reload datable
-          maintable.api().ajax.reload(function(){
+          maintable.ajax.reload(function(){
             hide_loading_message();
             show_message("Record '" + record_name + "' deleted successfully.", 'success');
           }, true);
