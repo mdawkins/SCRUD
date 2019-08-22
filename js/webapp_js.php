@@ -30,6 +30,8 @@ if ( isset($rowformat) ) {
 ?>
     "columns": [
 <?php
+if ( $showrownum == "yes" ) { echo "\t{ \"data\": \"rownum\", \"sClass\": \"rownum\", \"orderable\": false },\n"; }
+
 foreach ( $colslist as $i => $col ) {
 	if ( $col["colwidth"] == "yes" ) {
 		$sClassstring = ', "sClass": "truncate"';
@@ -44,6 +46,9 @@ foreach ( $colslist as $i => $col ) {
 ?>
       { "data": "functions",      "sClass": "functions" }
     ],
+<?php
+if ( $showrownum == "yes" ) { echo "    \"order\": [[ 1, 'asc' ]],\n"; }
+?>
     "aoColumnDefs": [
       { "bSortable": false, "aTargets": [-1] }
     ],
@@ -66,6 +71,7 @@ foreach ( $colslist as $i => $col ) {
 <?php
 $f = $linepresent = 0;
 $rowcnt = count($colslist);
+if ( $showrownum == "yes" ) { $rowcount++; $f++; }
 foreach ( $colslist as $i => $col ) {
 	if ( $linepresent == 1 && !empty($col["filterbox"]) ) {
 		echo ",\n";
@@ -90,6 +96,15 @@ foreach ( $colslist as $i => $col ) {
    ],
    { filters_tr_index: 1, cumulative_filtering: true }
   );
+
+<?php if ( $showrownum == "yes" ) { ?>
+  maintable.on( 'order.dt search.dt', function () {
+    maintable.column(0, {search:'applied', order:'applied'}).nodes().each( function (cell, i) {
+      cell.innerHTML = i+1;
+      maintable.cell(cell).invalidate('dom');
+    });
+  }).draw();
+<?php } ?>
 
   // On page load: form validation
   jQuery.validator.setDefaults({
@@ -308,7 +323,6 @@ foreach ( $colslist as $i => $col ) {
 	}
 }
 ?>
-	alert ( form_data );
       var request   = $.ajax({
 	url:          'data.php?job=edit_record<?php echo $addgetvar; ?>&id=' + id,
         cache:        false,

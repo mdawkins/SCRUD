@@ -182,6 +182,7 @@ $sqlsel_rows = "SELECT $table.id, $fields FROM $table $ljointables $wheres $grou
 		$k++;
 	}
 	$query_data[$j] = array_merge($query_data[$j], [ "functions" => $functions ]);
+	if ( $showrownum == "yes" ) { $query_data[$j] = array_merge( [ "rownum" => "rn" ], $query_data[$j] ); }
 	$j++;
       }
     }

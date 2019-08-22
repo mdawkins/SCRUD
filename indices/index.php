@@ -116,11 +116,13 @@ function closeNav() {
 	  <tr>
 <?php
 if ( !empty($_GET["page"]) ) {
+	if ( $showrownum == "yes" ) { echo "<th>No.</th>\n"; }
 	foreach ( $colslist as $i => $col ) {
 		echo "<th>".$col["title"]."</th>\n";
 	}
 	echo "<th>Functions</th>";
 	echo "</tr>\n<tr>\n";
+	if ( $showrownum == "yes" ) { echo "<th class=\"filter_content\"></th>\n"; }
 	foreach ( $colslist as $i => $col ) {
 		echo "<th class=\"filter_content\"></th>";
 	}
