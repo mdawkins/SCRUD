@@ -728,6 +728,9 @@ table.datatable thead th.filter_content {
 .lightbox_content .input_container .field_container label.error.valid {
   display: none !important;
 }
+.lightbox_content .input_container .field_container select[multiple] {
+  height: 90px;
+}
 .lightbox_content .input_container .field_container input, select {
   width: 100%;
   height: 32px;

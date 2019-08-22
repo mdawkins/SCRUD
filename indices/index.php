@@ -193,8 +193,8 @@ foreach ( $colslist as $i => $col ) {
 		case "tableselect":
 			include_once "$funcroot/selecttbllist.php";
 		case "select":
-			if ( $col["multiple"] == "yes" ) { $multiple = "multiple"; $size = "size=\"3\""; 
-			} else { unset($multiple); $size = "size=\"1\""; }
+			if ( $col["multiple"] == "yes" ) { $multiple = "multiple";
+			} else { unset($multiple); }
 			//echo "\t\t<select class=\"text\" name=\"".$col["column"]."[]\" id=\"".$col["column"]."\" ".$size." ".$multiple.">
 			echo "\t\t<select class=\"text\" name=\"".$col["column"]."\" id=\"".$col["column"]."\" ".$size." ".$multiple.">
 			<option value=\"\">Select a ".$col["title"]."</option>\n";
