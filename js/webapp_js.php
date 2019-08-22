@@ -12,6 +12,22 @@ $(document).ready(function(){
     //"fixedColumns": {leftColumns: 0, rightColumns: 1}, // Fix Column in place ie Freeze View
     "dom": 'rt<"bottom"pil><"clear">',
     "ajax": "data.php?job=get_records<?php echo $addgetvar; ?>",
+<?php
+if ( isset($rowformat) ) {
+	$i = 0;
+	echo "    \"createdRow\": function ( row, data ) {\n";
+	foreach ( $rowformat as $rfm ) {
+		if ( $i > 0 ) { echo "\telse"; }
+		$rfmvalue = $rfm["value"];
+		if ( $colslist[array_search($rfm["column"], array_column($colslist, "column"))]["input_type"] == "select" ) { // Not sure if tableselect should be included too
+			$rfmvalue = $lists[$rfm["column"]][ array_search( $rfm["value"], array_column( $lists[$rfm["column"]], "key" ) ) ]["title"];
+		}
+		echo " if ( data.".$rfm["column"]." == '$rfmvalue' ) { $(row).addClass('color".$rfm["value"]."'); }";
+		$i++;
+	}
+	echo "    },\n";
+}
+?>
     "columns": [
 <?php
 foreach ( $colslist as $i => $col ) {
@@ -43,6 +59,7 @@ foreach ( $colslist as $i => $col ) {
       "sInfo":          "Displaying _START_ to _END_ / _TOTAL_ Total",
       "sInfoFiltered":  "(filtered from _MAX_ total records)"
     }
+
   });
 
   yadcf.init(maintable, [
@@ -58,11 +75,11 @@ foreach ( $colslist as $i => $col ) {
 		$linepresent = 1;
 	} elseif ( $col["filterbox"] == "text" ) {
 		echo "    { column_number: $f, filter_type: \"text\" }";
-//		echo "    { column_number: $f, filter_type: \"auto_complete\", select_type_options: {width: '200px'} }";
+		//		echo "    { column_number: $f, filter_type: \"auto_complete\", select_type_options: {width: '200px'} }";
 		$linepresent = 1;
-//	} elseif ( !empty($col["filterbox"]) && $col["input_type"] == "checkbox" ) {
-//		echo "    { column_number: $f, data: ['Yes', 'No'], filter_default_label: 'Select Yes/No', select_type_options: {width: '200px'} }";
-//		$linepresent = 1;
+		//	} elseif ( !empty($col["filterbox"]) && $col["input_type"] == "checkbox" ) {
+		//		echo "    { column_number: $f, data: ['Yes', 'No'], filter_default_label: 'Select Yes/No', select_type_options: {width: '200px'} }";
+		//		$linepresent = 1;
 	} elseif ( !empty($col["filterbox"]) && $col["input_type"] == "date" ) {
 		echo "    { column_number: $f, filter_type: \"range_date\", date_format: \"mm/dd/yyyy\", filter_delay: 500 }";
 		$linepresent = 1;
@@ -79,9 +96,9 @@ foreach ( $colslist as $i => $col ) {
     success: 'valid',
     rules: {
       fiscal_year: {
-        required: true,
-        min:      2000,
-        max:      2025
+	required: true,
+	min:      2000,
+	max:      2025
       }
     },
     errorPlacement: function(error, element){
@@ -147,7 +164,7 @@ foreach ( $colslist as $i => $col ) {
       hide_lightbox();
     }
   });
-  
+
   // Hide iPad keyboard
   function hide_ipad_keyboard(){
     document.activeElement.blur();
@@ -172,8 +189,8 @@ foreach ( $colslist as $i => $col ) {
 <?php
 foreach ( $colslist as $i => $col ) {
 	if ( $col["multiple"] == "yes" ) {
-		// an array needs to be handled here -- arrayName.join(delimiter)
-		echo "\t$('#form_record #".$col["column"]."').val();\n";
+		// an array needs to be handled here
+		echo "\t$('#form_record #".$col["column"]."').val() || [];\n";
 	} else
 		echo "\t$('#form_record #".$col["column"]."').val('');\n";
 }
@@ -191,30 +208,38 @@ foreach ( $colslist as $i => $col ) {
       hide_lightbox();
       show_loading_message();
       var form_data = $('#form_record').serialize();
+<?php
+foreach ( $colslist as $i => $col ) {
+	if ( $col["multiple"] == "yes" ) {
+		// the first replace changes the first match to a placeholder, the second replace matches all the rest, and the third changes back the placeholder to the original value
+		echo "form_data = form_data.replace('&".$col["column"]."=', '##::##').replace(/&".$col["column"]."=/g, ';').replace(/##::##/g, '&".$col["column"]."=');\n";
+	}
+}
+?>
       var request   = $.ajax({
       url:          'data.php?job=add_record<?php echo $addgetvar; ?>',
-        cache:        false,
-        data:         form_data,
-        dataType:     'json',
-        contentType:  'application/json; charset=utf-8',
-        type:         'get'
+	cache:        false,
+	data:         form_data,
+	dataType:     'json',
+	contentType:  'application/json; charset=utf-8',
+	type:         'get'
       });
       request.done(function(output){
-        if (output.result == 'success'){
-          // Reload datable
-          maintable.ajax.reload(function(){
-            hide_loading_message();
-            var record_name = $('#blank').val();
-            show_message("Record '" + record_name + "' added successfully.", 'success');
-          }, true);
-        } else {
-          hide_loading_message();
-          show_message('Add request failed', 'error');
-        }
+	if (output.result == 'success'){
+	  // Reload datable
+	  maintable.ajax.reload(function(){
+	    hide_loading_message();
+	    var record_name = $('#blank').val();
+	    show_message("Record '" + record_name + "' added successfully.", 'success');
+	  }, true);
+	} else {
+	  hide_loading_message();
+	  show_message('Add request failed', 'error');
+	}
       });
       request.fail(function(jqXHR, textStatus){
-        hide_loading_message();
-        show_message('Add request failed: ' + textStatus, 'error');
+	hide_loading_message();
+	show_message('Add request failed: ' + textStatus, 'error');
       });
     }
   });
@@ -235,17 +260,17 @@ foreach ( $colslist as $i => $col ) {
     });
     request.done(function(output){
       if (output.result == 'success'){
-        $('.lightbox_content h2').text('Edit Record');
-        $('#form_record button').text('Update Record');
-        $('#form_record').attr('class', 'form edit');
-        $('#form_record').attr('data-id', id);
-        $('#form_record .field_container label.error').hide();
-        $('#form_record .field_container').removeClass('valid').removeClass('error');
+	$('.lightbox_content h2').text('Edit Record');
+	$('#form_record button').text('Update Record');
+	$('#form_record').attr('class', 'form edit');
+	$('#form_record').attr('data-id', id);
+	$('#form_record .field_container label.error').hide();
+	$('#form_record .field_container').removeClass('valid').removeClass('error');
 <?php
 foreach ( $colslist as $i => $col ) {
 	if ( $col["multiple"] == "yes" ) {
-		// an array needs to be handled here -- string.split(separator, limit
-		echo "\t$('#form_record #".$col["column"]."').val(output.data[0].".$col["column"].");\n";
+		// an array needs to be handled here -- string.split(separator)
+		echo "\t$('#form_record #".$col["column"]."').val(output.data[0].".$col["column"].".split(';')) || [];\n";
 	} elseif ( $col["input_type"] == "checkbox" ) {
 		echo "\t$('#form_record #".$col["column"]."').prop('checked', ( output.data[0].".$col["column"]." == 1 ) );\n";
 	} else
@@ -276,6 +301,14 @@ foreach ( $colslist as $i => $col ) {
       show_loading_message();
       var id        = $('#form_record').attr('data-id');
       var form_data = $('#form_record').serialize();
+<?php
+foreach ( $colslist as $i => $col ) {
+	if ( $col["multiple"] == "yes" ) {
+		echo "form_data = form_data.replace('&".$col["column"]."=', '##::##').replace(/&".$col["column"]."=/g, ';').replace(/##::##/g, '&".$col["column"]."=');\n";
+	}
+}
+?>
+	alert ( form_data );
       var request   = $.ajax({
 	url:          'data.php?job=edit_record<?php echo $addgetvar; ?>&id=' + id,
         cache:        false,
@@ -338,3 +371,4 @@ foreach ( $colslist as $i => $col ) {
   });
 
 });
+

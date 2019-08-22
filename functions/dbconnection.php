@@ -77,5 +77,5 @@ function db_close($conn) {
 		oci_close($conn);
 	}
 }
-
 ?>
+

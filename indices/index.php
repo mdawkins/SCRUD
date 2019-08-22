@@ -28,7 +28,33 @@ if ( isset($_GET["page"]) ) {
     <link rel="stylesheet" href="/css/jquery.dataTables.yadcf.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.8/css/select2.min.css">
     
-<?php include_once "$approot/css/layout.css"; ?>
+<?php 
+include_once "$approot/css/layout.css";
+
+if ( isset($rowformat) ) {
+	include_once "$approot/functions/cssstyle.php";
+	$bgcolorodd = '#fff';
+	$bgcoloreven = '#ddd';
+	$bgcolorhover = '#ffd';
+	echo "<style>\n";
+	foreach ( $rowformat as $rfm ) {
+		$rfmvalue = $rfm["value"];
+		$rfmbgcolor = $rfm["background-color"];
+		$rfmbgcoloreven = blend_rowcolors($bgcoloreven, $rfmbgcolor);
+		$rfmbgcolorhover = blend_rowcolors($bgcolorhover, $rfmbgcolor);
+		echo "table.datatable tbody tr.color$rfmvalue.odd {
+  background-color: $rfmbgcolor;
+}
+table.datatable tbody tr.color$rfmvalue.even {
+  background-color: $rfmbgcoloreven;
+}
+table.datatable tbody tr.color$rfmvalue:hover {
+  background-color: $rfmbgcolorhover;
+}\n";
+	}
+	echo "</style>\n";
+}
+?>
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Oxygen:400,700">
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 

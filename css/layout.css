@@ -10,7 +10,7 @@ body {
   font-family: 'Oxygen', Arial, Helvetica, sans-serif;
   font-size: 1rem;
   text-align: left;
-  color: #666;
+  color: #333;
 }
 
 /* Style the links inside the navigation bar */
@@ -297,7 +297,7 @@ button.button:active {
   background-color: #fff;
   color: #666;
   padding: 0 7px 0 7px;
-  border: 1px solid #ccc;
+  border: 1px solid #999;
   -webkit-border-radius: 6px;
   -moz-border-radius:    6px;
   border-radius:         6px;
@@ -346,7 +346,7 @@ button.button:active {
   line-height: 30px;
   color: #666;
   padding: 0 0 0 10px;
-  border: 1px solid #ccc;
+  border: 1px solid #999;
   -webkit-border-radius: 6px;
   -moz-border-radius:    6px;
   border-radius:         6px;
@@ -408,9 +408,9 @@ table.datatable {
 }
 table.datatable th,
 table.datatable td {
-  background-color: #fff;
+//  background-color: #fff;
   padding: 2px 10px 2px 10px;
-  border: 1px solid #ccc;
+  border: 1px solid #999;
 }
 
 table.datatable thead th {
@@ -433,11 +433,16 @@ table.datatable thead th.sorting_asc:active {
   background-color: #333;
 }
 
-table.datatable tbody tr:nth-child(even) td {
+/*table.datatable tbody tr:nth-child(even) td {*/
+table.datatable tbody tr.even {
   background-color: #eee;
 }
-table.datatable tbody tr:hover th,
-table.datatable tbody tr:hover td {
+table.datatable tbody tr.odd {
+  background-color: #fff;
+}
+/*table.datatable tbody tr:hover th,
+table.datatable tbody tr:hover td { */
+table.datatable tbody tr:hover {
   background-color: #ffd;
 }
 table.datatable tbody tr:hover td.dataTables_empty {
@@ -552,6 +557,7 @@ table.datatable tbody td.functions .function_buttons a:focus {
 table.datatable tbody td.functions .function_buttons span {
   display: none;
 }
+
 /* Filter Row -------------------- */
 
 table.datatable thead th.filter_content {
@@ -564,7 +570,7 @@ table.datatable thead th.filter_content {
   line-height: 30px;
   color: #666;
   padding: 0 0 0 10px;
-  border: 1px solid #ccc;
+  border: 1px solid #999;
   box-sizing: border-box;
   border-radius: 4px;
 }
@@ -573,7 +579,7 @@ table.datatable thead th.filter_content {
   color: #000;
 }
 .filter_content button {
-  border: 1px solid #ccc;
+  border: 1px solid #999;
   border-radius: 4px;
   height: 32px;
   width: 12px;
@@ -594,7 +600,7 @@ table.datatable thead th.filter_content {
   background-color: #f9f9f9;
   line-height: 30px;
   padding: 0 0 0 10px;
-  border: 1px solid #ccc;
+  border: 1px solid #999;
   margin-top: none;
   box-sizing: border-box;
 }
@@ -729,7 +735,7 @@ table.datatable thead th.filter_content {
   line-height: 30px;
   color: #666;
   padding: 0 0 0 10px;
-  border: 1px solid #ccc;
+  border: 1px solid #999;
   -webkit-box-sizing: border-box;
   -moz-box-sizing:    border-box;
   box-sizing:         border-box;
