@@ -23,4 +23,25 @@ function blend_rowcolors ( $basecolor, $rowcolor ) {
 	return $hccomb;
 }
 
+function rowformat ( $rowformat, $bgcolorodd, $bgcoloreven, $bgcolorhover ) {
+	$cssstyle = "<style>\n";
+	foreach ( $rowformat as $rfm ) {
+		$rfmvalue = $rfm["value"];
+		$rfmbgcolor = $rfm["background-color"];
+		$rfmbgcoloreven = blend_rowcolors($bgcoloreven, $rfmbgcolor);
+		$rfmbgcolorhover = blend_rowcolors($bgcolorhover, $rfmbgcolor);
+		$cssstyle .= "table.datatable tbody tr.color$rfmvalue.odd {
+  background-color: $rfmbgcolor;
+}
+table.datatable tbody tr.color$rfmvalue.even {
+  background-color: $rfmbgcoloreven;
+}
+table.datatable tbody tr.color$rfmvalue:hover {
+  background-color: $rfmbgcolorhover;
+}\n";
+	}
+	$cssstyle .= "</style>\n";
+	return $cssstyle;
+}
+
 ?>
