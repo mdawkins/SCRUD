@@ -1,6 +1,10 @@
 <?php
 if ( !empty($_GET["page"]) ) {
-	require_once "pages/".$_GET["page"].".php";
+	if ( !empty($_GET["subpage"]) ) {
+		require_once "pages/".$_GET["subpage"].".php";
+	} else {
+		require_once "pages/".$_GET["page"].".php";
+	}
 	if( isset($colorderby) ) {
 		$colorderby = "ORDER BY ".str_replace("::", " ", $colorderby);
 	}
@@ -13,6 +17,7 @@ require_once "$funcroot/dbconnection.php";
 // Get job (and id)
 $job = "";
 $id  = "";
+$subpage  = "";
 if ( isset($_GET["job"]) ) {
   $job = $_GET["job"];
   if ($job == "get_records" ||
@@ -26,11 +31,13 @@ if ( isset($_GET["job"]) ) {
         $id = "";
       }
     }
+    if ( isset($_GET["subpage"]) ) {
+      $subpage = $_GET["subpage"];
+    }
   } else {
     $job = "";
   }
 }
-
 // Prepare array
 $query_data = array();
 
@@ -60,7 +67,7 @@ foreach ( $lists["pivcols"] as $key ) {
 
 // table row header
 foreach ( $colslist as $i => $col ) {
-	if ( $col["input_type"] == "tableselect" && array_search($col["column"], array_column($selslist, "selcol")) !== null ) {
+	if ( ( $col["input_type"] == "tableselect" || ( $col["input_type"] == "crosswalk" && !empty($subpage) ) ) && array_search($col["column"], array_column($selslist, "selcol")) !== null ) {
 		foreach ( $selslist as $k => $sel ) {
 			if ( $col["column"] == $sel["selcol"] ) {
 				$searchcol = $sel["selname"];
@@ -73,6 +80,9 @@ foreach ( $colslist as $i => $col ) {
 				} elseif ( $col["concatfield"] == "yes" ) {
 					$fields .= str_replace("%T%", "t$i", $sel["selname"]." AS ".$col["column"]).",";
 					$ljointables .= $table.".".$col["column"]." = t$i.".$sel["selid"]." ";
+				} elseif ( $col["input_type"] == "crosswalk" ) {
+					$ljointables .= $table.".id = t$i.".$sel["selid"]." ";
+					$wheres .= "t$i.".$sel["wherekey"]." = $id AND"; 
 				} else {
 					$fields .= "t$i.".$sel["selname"]." AS ".$col["column"].",";
 					$ljointables .= $table.".".$col["column"]." = t$i.".$sel["selid"]." ";
@@ -96,6 +106,8 @@ foreach ( $colslist as $i => $col ) {
 	} elseif ( $col["input_type"] == "datetime" ) {
 		$tablecolname = "$table.".$col["column"];
 		$fields .= "IF($tablecolname IS NULL OR $tablecolname = '0000-00-00 00:00:00', '--', date_format($tablecolname, '%m/%d/%Y %r')) AS ".$col["column"].",";
+	} elseif ( $col["input_type"] == "drilldown" || $col["input_type"] == "crosswalk" ) {
+		continue;
 	} else {
 		$fields .= "$table.".$col["column"].", ";
        	}
@@ -168,6 +180,13 @@ $sqlsel_rows = "SELECT $table.id, $fields FROM $table $ljointables $wheres $grou
 			} else {
 				$row[$col["column"]] = "<i class=\"fa fa-fw fa-square\">";
 			}
+		} elseif ( $col["input_type"] == "drilldown" ) {
+        		$row[$col["column"]]  = '<div class="function_buttons"><ul>';
+        		$row[$col["column"]] .= '<li class="function_drilldown"><a data-id="'.$row["id"].'" data-name="'.$col["column"].'"><span>Show</span></a></li>';
+        		$row[$col["column"]] .= '<li class="function_adddrilldown"><a data-id="'.$row["id"].'" data-name="'.$row["column"].'"><span>Add</span></a></li>';
+			$row[$col["column"]] .= '</ul></div>';
+		} elseif ( $col["input_type"] == "crosswalk" ) {
+			continue;
 		} else { // this is legacy td title from pajm, not going to work here
 			if ( isset($col["colwidth"]) && $col["colwidth"] < strlen($colstring) ) {
 				$titlestring = "title=\"$colstring\"";
@@ -182,7 +201,7 @@ $sqlsel_rows = "SELECT $table.id, $fields FROM $table $ljointables $wheres $grou
 		$k++;
 	}
 	$query_data[$j] = array_merge($query_data[$j], [ "functions" => $functions ]);
-	if ( $showrownum == "yes" ) { $query_data[$j] = array_merge( [ "rownum" => "rn" ], $query_data[$j] ); }
+	if ( $showrownum == "yes" && empty($subpage) ) { $query_data[$j] = array_merge( [ "rownum" => "rn" ], $query_data[$j] ); }
 	$j++;
       }
     }
@@ -233,6 +252,7 @@ $sqlsel_rows = "SELECT $table.id, $fields FROM $table $ljointables $wheres $grou
     } else {
       $result  = "success";
       $message = "query success";
+      $lastid = $query->insert_id;
     }
   
   } elseif ( $job == "edit_record" ){
@@ -288,10 +308,12 @@ $sqlsel_rows = "SELECT $table.id, $fields FROM $table $ljointables $wheres $grou
 
 // Prepare data
 $data = array(
+  "colsls"  => $colslist,
   "sql"     => $sqlsel_rows,
   "result"  => $result,
   "message" => $message,
   "data"    => $query_data,
+  "lastid"  => $lastid,
 );
 
 // Convert PHP array to JSON array

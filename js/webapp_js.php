@@ -38,9 +38,14 @@ foreach ( $colslist as $i => $col ) {
 	} elseif ( $col["input_type"] == "currency" ) {
 		$sClassstring = ', "sClass": "integer"';
 	} elseif ( $col["hidecol"] == "yes" ) {
-		$sClassstring =', "visible": false,';
+		$sClassstring =', "visible": false';
+	} elseif (  $col["input_type"] == "drilldown" ) {
+		$sClassstring = ', "sClass": "functions", "orderable": false';
+		$issetdrilldown = 1;
 	}
-	echo "\t{ \"data\": \"".$col["column"]."\"$sClassstring },\n";
+	if ( $col["input_type"] != "crosswalk" ) {
+		echo "\t{ \"data\": \"".$col["column"]."\"$sClassstring },\n";
+	}
 	unset($sClassstring);
 }
 ?>
@@ -206,8 +211,9 @@ foreach ( $colslist as $i => $col ) {
 	if ( $col["multiple"] == "yes" ) {
 		// an array needs to be handled here
 		echo "\t$('#form_record #".$col["column"]."').val() || [];\n";
-	} else
+	} elseif ( $col["input_type"] != "drilldown" && $col["input_type"] != "crosswalk" ) {
 		echo "\t$('#form_record #".$col["column"]."').val('');\n";
+	}
 }
 ?>
     show_lightbox();
@@ -241,7 +247,7 @@ foreach ( $colslist as $i => $col ) {
       });
       request.done(function(output){
 	if (output.result == 'success'){
-	  // Reload datable
+	  // Reload DataTable
 	  maintable.ajax.reload(function(){
 	    hide_loading_message();
 	    var record_name = $('#blank').val();
@@ -259,6 +265,103 @@ foreach ( $colslist as $i => $col ) {
     }
   });
 
+<?php
+if ( $issetdrilldown === 1 ) {
+?>
+  //For each child table
+<?php
+
+function loadchildpage ( $childpage ) {
+	require_once "pages/$childpage.php";
+	return [ $pagetitle, $table, $showidcolumn, $showrownum, $colorderby, $selslist, $lists, $colslist, $rowformat ];
+}
+
+foreach ( $colslist as $i => $col ) {
+	if ( $col["input_type"] == "drilldown" ) {
+		$childvars = loadchildpage( $col["column"] );
+		//print_r($childvars);
+		// statically linking variables to child prefix + variable name
+		$childpagetitle = $childvars[0];
+		$childtable = $childvars[1];
+		$childshowidcolumn = $childvars[2];
+		$childshowrownum = $childvars[3];
+		$childcolorderby = $childvars[4];
+		$childselslist = $childvars[5];
+		$childlists = $childvars[6];
+		$childcolslist = $childvars[7];
+		$childrowformat = $childvars[8];
+		//print_r($childvars);
+		$child_header = "var ".$col["column"]."_header = `<table class=\"datatable\" id=\"".$col["column"]."_##ID##\">\n\t<thead><tr>\n";
+		$child_columns = "var ".$col["column"]."_columns = `[\n"; 
+		foreach ( $childcolslist as $i => $childcol ) {
+			if ( $childcol["colwidth"] == "yes" ) {
+				$sClassstring = ', "sClass": "truncate"';
+			} elseif ( $childcol["input_type"] == "currency" ) {
+				$sClassstring = ', "sClass": "integer"';
+			} elseif ( $childcol["hidecol"] == "yes" ) {
+				$sClassstring =', "visible": false';
+			}
+			if ( $childcol["input_type"] != "drilldown" && $childcol["input_type"] != "crosswalk" ) {
+				$child_header .= "\t\t<th>".$childcol["title"]."</th>\n";
+				$child_columns .= "    { \"data\": \"".$childcol["column"]."\"$sClassstring },\n";
+			}
+			unset($sClassstring);
+		}
+ 		$child_header .= "\t\t<th>Functions</th>\n\t</tr></thead>\n</table>`;\n";
+		$child_columns .= "    { \"data\": \"functions\", \"sClass\": \"functions\", \"orderable\": false }\n]`;\n";
+		echo $child_header;
+		echo $child_columns;
+	}
+}
+?>
+  function format_header ( varheader, table_id ) {
+  	return varheader.replace("##ID##", table_id);
+  }
+  var tablecount=1;
+
+  // Show Drill Down table
+  $(document).on('click', '.function_drilldown a', function(e){
+    e.preventDefault();
+    // Get Child Records linked to id
+    var id	= $(this).data('id');
+    var subpage	= $(this).data('name');
+    
+    var tr = $(this).closest('tr');
+    var row = maintable.row( tr );
+
+    if ( row.child.isShown() ) {
+      // This row is already open - close it
+      row.child.hide();
+      tr.removeClass('collapse');
+    } else {
+      // Open this row
+      var childheader = eval( subpage + '_header');
+      var childcolumns = eval( subpage + '_columns');
+      row.child( format_header( childheader, tablecount ) ).show();
+      tr.addClass('collapse');
+    }
+    //show_loading_message();
+    var childtable = $('#' + subpage + '_' + tablecount).DataTable({
+      "bPaginate": false,
+      "bSortable": false,
+      "searching": false,
+      "paging": false,
+      "info": false,
+      "ajax": {
+         "url":          'data.php?job=get_records<?php echo $addgetvar; ?>',
+         "cache":        true,
+         "data":         {'id': id ,'subpage': subpage},
+         "dataType":     'json',
+         "contentType":  'application/json; charset=utf-8',
+	 "type":         'get'
+      },
+      "columns":  eval(  childcolumns  ) 
+    });
+    tablecount++;
+  });
+<?php
+}
+?>
   // Edit Record button
   $(document).on('click', '.function_edit a', function(e){
     e.preventDefault();
@@ -288,8 +391,9 @@ foreach ( $colslist as $i => $col ) {
 		echo "\t$('#form_record #".$col["column"]."').val(output.data[0].".$col["column"].".split(';')) || [];\n";
 	} elseif ( $col["input_type"] == "checkbox" ) {
 		echo "\t$('#form_record #".$col["column"]."').prop('checked', ( output.data[0].".$col["column"]." == 1 ) );\n";
-	} else
+	} elseif ( $col["input_type"] != "drilldown" && $col["input_type"] != "crosswalk" ) {
 		echo "\t$('#form_record #".$col["column"]."').val(output.data[0].".$col["column"].");\n";
+	}
 }
 ?>
         hide_loading_message();
