@@ -28,33 +28,14 @@ if ( isset($_GET["page"]) ) {
     <link rel="stylesheet" href="/css/jquery.dataTables.yadcf.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.8/css/select2.min.css">
     
+    <link rel="stylesheet" href="/css/layout.css">
 <?php 
-include_once "$approot/css/layout.css";
-
 if ( isset($rowformat) ) {
 	include_once "$approot/functions/cssstyle.php";
-	$bgcolorodd = '#fff';
-	$bgcoloreven = '#ddd';
-	$bgcolorhover = '#ffd';
-	echo "<style>\n";
-	foreach ( $rowformat as $rfm ) {
-		$rfmvalue = $rfm["value"];
-		$rfmbgcolor = $rfm["background-color"];
-		$rfmbgcoloreven = blend_rowcolors($bgcoloreven, $rfmbgcolor);
-		$rfmbgcolorhover = blend_rowcolors($bgcolorhover, $rfmbgcolor);
-		echo "table.datatable tbody tr.color$rfmvalue.odd {
-  background-color: $rfmbgcolor;
-}
-table.datatable tbody tr.color$rfmvalue.even {
-  background-color: $rfmbgcoloreven;
-}
-table.datatable tbody tr.color$rfmvalue:hover {
-  background-color: $rfmbgcolorhover;
-}\n";
-	}
-	echo "</style>\n";
+	echo rowformat( $rowformat, '#fff', '#ddd', '#ffd' );
 }
 ?>
+    <link rel="stylesheet" href="/css/topmenubar.css">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Oxygen:400,700">
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 
@@ -70,72 +51,54 @@ table.datatable tbody tr.color$rfmvalue:hover {
 <!--    <script charset="utf-8" src="https://cdnjs.cloudflare.com/ajax/libs/yadcf/0.9.3/jquery.dataTables.yadcf.min.js"></script> --!>
     <script charset="utf-8" src="/js/jquery.dataTables.yadcf.js"></script>
     <script charset="utf-8" src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.8/js/select2.min.js"></script>
-    <script>
-/* Toggle between adding and removing the "responsive" class to topnav when the user clicks on the icon */
-function myFunction() {
-  var x = document.getElementById("myTopnav");
-  if (x.className === "topnav") {
-    x.className += " responsive";
-  } else {
-    x.className = "topnav";
-  }
-}
-
-function openNav() {
-	  document.getElementById("myNav").style.width = "250px";
-	  }
-
-function closeNav() {
-  document.getElementById("myNav").style.width = "0%";
-}
-    </script>
+    <script charset="utf-8" src="/js/topnav.js"></script>
+    <script charset="utf-8" src="/js/addeditform.js"></script>
     <script><?php if ( !empty($_GET["page"]) ) { require_once "$approot/js/webapp_js.php"; } ?></script>
   </head>
   <body>
-    <!-- top menu bar --!>
-    <div class="topnav" id="myTopnav">
-     <a class="active" href="#home" onclick="openNav()"><i class="fa fa-fw fa-bars"></i>Menu</a>
-     <a href="#news"><i class="fa fa-fw fa-check-square"></i>News</a>
-     <a href="#contact"><i class="fa fa-fw fa-square"></i>Contact</a>
-     <a href="#about"><i class="fa fa-fw fa-home"></i>About</a>
-     <a href="javascript:void(0);" class="icon" onclick="myFunction()">
-      <i class="fa fa-bars"></i>
-     </a>
-    </div>
 
-    <div id="myNav" class="overlay">
-     <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-     <div class="overlay-content">
-<?php echo $menuhtml; ?>
-     </div>
-    </div>
+<!-- top menu bar --!>
+<?php
+include_once "$approot/templates/topmenubar.php";
+?>
 
     <div id="page_container">
-      <table class="datatable" id="table_records">
-        <thead>
-	  <tr>
 <?php
 if ( !empty($_GET["page"]) ) {
-	if ( $showrownum == "yes" ) { echo "<th>No.</th>\n"; }
-	foreach ( $colslist as $i => $col ) {
-		echo "<th>".$col["title"]."</th>\n";
+	$showfilter = "no";
+	$tablehtml = "<table class=\"datatable\" id=\"table_records\">\n";
+	$tableheader = "<thead>\n\t<tr>\n";
+	$tablefilter = "<tr>\n";
+	if ( $showrownum == "yes" ) {
+		$tableheader .= "<th>No.</th>\n";
+		$tablefilter .= "<th class=\"filter_content\"></th>\n";
 	}
-	echo "<th>Functions</th>";
-	echo "</tr>\n<tr>\n";
-	if ( $showrownum == "yes" ) { echo "<th class=\"filter_content\"></th>\n"; }
 	foreach ( $colslist as $i => $col ) {
-		echo "<th class=\"filter_content\"></th>";
+		if ( !empty($col["filterbox"]) ) { $showfilter = "yes"; }
+		if ( $col["input_type"] != "crosswalk" ) {
+			$tableheader .= "<th>".$col["title"]."</th>\n";
+			$tablefilter .= "<th class=\"filter_content\"></th>\n";
+		}
 	}
-	echo "<th>\n";
-	echo "<div class=\"topfunc_buttons\"><ul>\n";
-	echo "<li id=\"reset\" class=\"function_reordercols\"><a><span>Reorder</span></a></li>\n";
-	echo "<li id=\"add_record\" class=\"function_addrecord\"><a><span>Add</span></a></li>\n";
-	echo "</ul></div>\n";
-	echo "</th>\n";
+	$tableheader .= "<th>Functions</th>\n";
+	$tablefilter .= "<th>\n";
+	$tablefilter .= "<div class=\"topfunc_buttons\"><ul>\n";
+	$tablefilter .= "<li id=\"reset\" class=\"function_reordercols\"><a><span title=\"Reorder Columns\">Reorder</span></a></li>\n";
+	$tablefilter .= "<li id=\"add_record\" class=\"function_addrecord\"><a><span title=\"Add Record\">Add</span></a></li>\n";
+	$tablefilter .= "</ul></div>\n";
+	$tablefilter .= "</th>\n";
+	$tableheader .= "</tr>\n";
+	$tablefilter .= "</tr>\n";
+
+	$tablehtml .= $tableheader;
+	if ( $showfilter == "yes" ) {
+		$tablehtml .= $tablefilter;
+	}
+	$tablehtml .= "</thead>\n";
+
+	echo $tablehtml;
 }
 ?>
-          </tr>
-        </thead>
         <tbody>
         </tbody>
       </table>
@@ -147,12 +110,13 @@ if ( !empty($_GET["page"]) ) {
     <div class="lightbox_container">
       <div class="lightbox_close"></div>
       <div class="lightbox_content">
-        
+
+<!-- start of form --!>
         <h2>##blank##</h2>
 	<form class="form add" id="form_record" data-id="" novalidate>
 <?php
 foreach ( $colslist as $i => $col ) {
-	if ( $col["input_type"] != "noform" ) {
+	if ( $col["input_type"] != "noform" && $col["input_type"] != "drilldown" && $col["input_type"] != "crosswalk") {
 		if ( $col["required"] == "yes" ) {
 			$errspan = "<span class='required'>*</span>";
 			$errinput = "required";
@@ -183,7 +147,7 @@ foreach ( $colslist as $i => $col ) {
 			break;
 
 		case "textarea":
-			echo "\t\t<input type=\"textarea\" class=\"text\" name=\"".$col["column"]."\" id=\"".$col["column"]."></textarea>\n";
+			echo "\t\t<textarea class=\"text textarea\" name=\"".$col["column"]."\" id=\"".$col["column"]."></textarea>\n";
 			break;
 
 		case "checkbox":
@@ -195,7 +159,6 @@ foreach ( $colslist as $i => $col ) {
 		case "select":
 			if ( $col["multiple"] == "yes" ) { $multiple = "multiple";
 			} else { unset($multiple); }
-			//echo "\t\t<select class=\"text\" name=\"".$col["column"]."[]\" id=\"".$col["column"]."\" ".$size." ".$multiple.">
 			echo "\t\t<select class=\"text\" name=\"".$col["column"]."\" id=\"".$col["column"]."\" ".$size." ".$multiple.">
 			<option value=\"\">Select a ".$col["title"]."</option>\n";
 			$multisels = explode(";", ${$col["column"]});
@@ -218,6 +181,7 @@ foreach ( $colslist as $i => $col ) {
             <button type="submit">##blank##</button>
           </div>
         </form>
+<!-- end of form --!>
         
       </div>
     </div>
