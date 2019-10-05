@@ -8,6 +8,7 @@ if ( !empty($_GET["page"]) ) {
 	if( isset($colorderby) ) {
 		$colorderby = "ORDER BY ".str_replace("::", " ", $colorderby);
 	}
+	$pageinfo = [ "pagetitle" => $pagetitle, "table" => $table, "showidcolumn" => $showidcolumn, "showrownum" => $showrownum, "showdeletecolumn" => $showdeletecolumn, "colorderby" => $colorderby, "rowlimit" => $rowlimit ];
 
 // Database details
 require_once ".serv.conf";
@@ -24,7 +25,8 @@ if ( isset($_GET["job"]) ) {
       $job == "get_record"   ||
       $job == "add_record"   ||
       $job == "edit_record"  ||
-      $job == "delete_record") {
+      $job == "delete_record" ||
+      $job == "page_lists") {
     if ( isset($_GET["id"]) ) {
       $id = $_GET["id"];
       if ( !is_numeric($id) ) {
@@ -42,7 +44,7 @@ if ( isset($_GET["job"]) ) {
 $query_data = array();
 
 // Valid job found
-if ( $job != "" ) {
+if ( $job != "" && $job != "page_lists") {
   
   // Connect to database
   $conn = db_connect($servername, $username, $password, $database);
@@ -238,7 +240,6 @@ $sqlsel_rows = "SELECT $table.id, $fields FROM $table $ljointables $wheres $grou
     }
   
   } elseif ( $job == "add_record" ) {
-    
     // Add Record
     $query = "INSERT INTO $table SET ";
 	foreach ( $colslist as $i => $col ) {
@@ -304,12 +305,19 @@ $sqlsel_rows = "SELECT $table.id, $fields FROM $table $ljointables $wheres $grou
   
   // Close database connection
   db_close($conn);
+} elseif ( $job == "page_lists" ) {
+	$result   = "success";
+	$message  = "page_lists";
+	$query_data = [ "page" => $_GET["page"], "app" => $_GET["app"] ];
 }
 
 // Prepare data
 $data = array(
+  "pginfo"  => $pageinfo,
   "colsls"  => $colslist,
-  "sql"     => $sqlsel_rows,
+  "lists"   => $lists,
+  "rowfmt"  => $rowformat,
+//  "sql"     => $sqlsel_rows,
   "result"  => $result,
   "message" => $message,
   "data"    => $query_data,
