@@ -39,6 +39,9 @@ if ( isset($rowformat) ) {
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Oxygen:400,700">
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 
+    <script charset="utf-8" src="/js/topnav.js"></script>
+    <script charset="utf-8" src="/js/addeditform.js"></script>
+
     <script charset="utf-8" src="//code.jquery.com/jquery-3.4.1.min.js"></script>
     <script charset="utf-8" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
     <script charset="utf-8" src="//cdn.jsdelivr.net/jquery.validation/1.13.1/jquery.validate.min.js"></script>
@@ -48,11 +51,9 @@ if ( isset($rowformat) ) {
     <script charset="utf-8" src="//cdn.datatables.net/fixedheader/3.1.5/js/dataTables.fixedHeader.min.js"></script>
 <!--<script charset="utf-8" src="https://cdn.datatables.net/responsive/2.2.2/js/dataTables.responsive.min.js"></script> --!>
 <!--<script charset="utf-8" src="https://cdn.datatables.net/responsive/2.2.2/js/responsive.jqueryui.min.js"></script> --!>
-<!--    <script charset="utf-8" src="https://cdnjs.cloudflare.com/ajax/libs/yadcf/0.9.3/jquery.dataTables.yadcf.min.js"></script> --!>
+<!--<script charset="utf-8" src="https://cdnjs.cloudflare.com/ajax/libs/yadcf/0.9.3/jquery.dataTables.yadcf.min.js"></script> --!>
     <script charset="utf-8" src="/js/jquery.dataTables.yadcf.js"></script>
     <script charset="utf-8" src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.8/js/select2.min.js"></script>
-    <script charset="utf-8" src="/js/topnav.js"></script>
-    <script charset="utf-8" src="/js/addeditform.js"></script>
     <script><?php if ( !empty($_GET["page"]) ) { require_once "$approot/js/webapp_js.php"; } ?></script>
   </head>
   <body>
