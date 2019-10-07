@@ -40,7 +40,7 @@ if ( isset($rowformat) ) {
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 
     <script charset="utf-8" src="/js/topnav.js"></script>
-    <script charset="utf-8" src="/js/addeditform.js"></script>
+    <script charset="utf-8" src="/js/webapp_functions.js"></script>
 
     <script charset="utf-8" src="//code.jquery.com/jquery-3.4.1.min.js"></script>
     <script charset="utf-8" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
@@ -54,7 +54,7 @@ if ( isset($rowformat) ) {
 <!--<script charset="utf-8" src="https://cdnjs.cloudflare.com/ajax/libs/yadcf/0.9.3/jquery.dataTables.yadcf.min.js"></script> --!>
     <script charset="utf-8" src="/js/jquery.dataTables.yadcf.js"></script>
     <script charset="utf-8" src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.8/js/select2.min.js"></script>
-    <script><?php if ( !empty($_GET["page"]) ) { require_once "$approot/js/webapp_js.php"; } ?></script>
+    <script charset="utf-8" src="/js/webapp.js"></script>
   </head>
   <body>
 
@@ -64,42 +64,7 @@ include_once "$approot/templates/topmenubar.php";
 ?>
 
     <div id="page_container">
-<?php
-if ( !empty($_GET["page"]) ) {
-	$showfilter = "no";
-	$tablehtml = "<table class=\"datatable\" id=\"table_records\">\n";
-	$tableheader = "<thead>\n\t<tr>\n";
-	$tablefilter = "<tr>\n";
-	if ( $showrownum == "yes" ) {
-		$tableheader .= "<th>No.</th>\n";
-		$tablefilter .= "<th class=\"filter_content\"></th>\n";
-	}
-	foreach ( $colslist as $i => $col ) {
-		if ( !empty($col["filterbox"]) ) { $showfilter = "yes"; }
-		if ( $col["input_type"] != "crosswalk" ) {
-			$tableheader .= "<th>".$col["title"]."</th>\n";
-			$tablefilter .= "<th class=\"filter_content\"></th>\n";
-		}
-	}
-	$tableheader .= "<th>Functions</th>\n";
-	$tablefilter .= "<th>\n";
-	$tablefilter .= "<div class=\"topfunc_buttons\"><ul>\n";
-	$tablefilter .= "<li id=\"reset\" class=\"function_reordercols\"><a><span title=\"Reorder Columns\">Reorder</span></a></li>\n";
-	$tablefilter .= "<li id=\"add_record\" class=\"function_addrecord\"><a><span title=\"Add Record\">Add</span></a></li>\n";
-	$tablefilter .= "</ul></div>\n";
-	$tablefilter .= "</th>\n";
-	$tableheader .= "</tr>\n";
-	$tablefilter .= "</tr>\n";
-
-	$tablehtml .= $tableheader;
-	if ( $showfilter == "yes" ) {
-		$tablehtml .= $tablefilter;
-	}
-	$tablehtml .= "</thead>\n";
-
-	echo $tablehtml;
-}
-?>
+      <table class="datatable" id="table_records">
         <tbody>
         </tbody>
       </table>
