@@ -25,7 +25,7 @@ function filter_columns ( colslist, showrownum ) {
   filterline += " ]";
   return JSON.parse(filterline);
 }
-function form_inputs( colsls, action, id, output ) {
+function form_inputs( colsls, action, id, data ) {
   if ( action == "add" ) { id, output = ''; }
   var ucaction = action.replace( /^./, action[0].toUpperCase() );
   $('.lightbox_content h2').text( ucaction + ' Record');
@@ -40,11 +40,11 @@ function form_inputs( colsls, action, id, output ) {
     var column = col["column"];
     if ( action == 'edit' ) {
       if ( col["multiple"] == "yes" ) {
-        $(columnclass).val( output.data[0][column].split(';') ) || [];
+        $(columnclass).val( data[0][column].split(';') ) || [];
       } else if ( col["input_type"] == "checkbox" ) {
-        $(columnclass).prop( 'checked', ( output.data[0][column]  == 1 ) );
+        $(columnclass).prop( 'checked', ( data[0][column]  == 1 ) );
       } else if ( col["input_type"] != "drilldown" && col["input_type"] != "crosswalk" ) {
-        $(columnclass).val( output.data[0][column] );
+        $(columnclass).val( data[0][column] );
       }
     } else if ( action == 'add' ) {
       if ( col["multiple"] == "yes" ) {
@@ -129,7 +129,7 @@ function rw_fmt ( lists, rowfmt ) {
 function dt_header ( columnslist, lists, tableid, showrownum, showdeletecolumn ) {
   var showfilter = "no";
   var headerhtml = "<table class=\"datatable\" id=\"" + tableid + "\">\n<thead>\n\t<tr>\n";
-  var filterhtml = "<tr>\n";
+  var filterhtml = "\t<tr>\n";
   if ( showrownum == "yes" && tableid == "maintable" ) {
     headerhtml += "\t\t<th>No.</th>\n";
     filterhtml += "\t\t<th class=\"filter_content\"></th>\n";
@@ -148,11 +148,12 @@ function dt_header ( columnslist, lists, tableid, showrownum, showdeletecolumn )
     filterhtml += "\t\t\t\t<li id=\"add_record\" class=\"function_addrecord\"><a><span title=\"Add Record\">Add</span></a></li>\n";
     filterhtml += "\t\t\t</ul></div>\n\t\t</th>\n";
   }
-  headerhtml += "\t</tr>\n</thead>\n</table>\n";
   if ( tableid == "maintable" ) {
+    headerhtml += "\t</tr>\n";
     headerhtml += filterhtml;
   }
-  filterhtml += "\t</tr></thead>\n</table>\n";
+  headerhtml += "\t</tr></thead>\n</table>\n";
+  //console.log(headerhtml);
   return headerhtml;
 }
 function format_header_id ( varheader, table_id ) {
@@ -162,6 +163,7 @@ function addedit_form ( columnslist, lists ) {
   var formhtml = "<h2>##blank##</h2>\n";
   formhtml += "<form class=\"form add\" id=\"form_record\" data-id=\"\" novalidate>\n";
   columnslist.forEach(function(col) {
+   // console.log( eval(col["column"])  );
     if ( col["input_type"] != "noform" && col["input_type"] != "drilldown" && col["input_type"] != "crosswalk" ) {
       if ( col["required"] == "yes" ) {
         var errspan = "<span class='required'>*</span>"; 
@@ -177,12 +179,13 @@ function addedit_form ( columnslist, lists ) {
       if ( col["input_type"] == "textarea" ) {
       formhtml += "\t\t<textarea class=\"text textarea\" name=\"" + col["column"] + "\" id=\"" + col["column"] + "></textarea>\n";
       } else if ( col["input_type"] == "select" || col["input_type"] == "tableselect" ) {
-        if ( col["mulitple"] == "yes" ) { var multiple = "multiple";
+        if ( col["multiple"] == "yes" ) { var multiple = "multiple";
         } else var multiple = "";
         formhtml += "\t\t<select class=\"text\" name=\"" + col["column"] + "\" id=\"" + col["column"] + multiple + ">\n";
-        formhtml += "\t\t\t<option value=\"\">Select a " + col["column"] + "</option>\n";
-        var multisels = eval( col["column"].split(";") ); //explode(";", ${$col["column"]});
-        lists.forEach(function(list) {
+        formhtml += "\t\t\t<option value=\"\">Select a " + col["title"] + "</option>\n";
+        var multisels = eval(col["column"]);
+	//multusels = multisels.split(";"); //explode(";", ${$col["column"]});
+        Object.keys(lists).forEach(function(list) {
           if ( multisels.indexOf(list["key"]) !== false ) {
 	    var selected = "selected";
           } else var selected = "";
@@ -192,13 +195,14 @@ function addedit_form ( columnslist, lists ) {
         });
         formhtml += "\t\t</select>\n";
       } else {
-        formhtml += "\t\t<input type=\"" + col["input_type"] + "\" class=\"text\" name=\"" + col["column"] + "\" id=\"" + col["column"] + "\" value=\"\" " + errinput> + "\n";
+        formhtml += "\t\t<input type=\"" + col["input_type"] + "\" class=\"text\" name=\"" + col["column"] + "\" id=\"" + col["column"] + "\" value=\"\" " + errinput + ">\n";
       }
       formhtml += "\t</div>\n</div>\n";
     }
   });
   formhtml += "\t<div class=\"button_container\">\n\t\t<button type=\"submit\">##blank##</button>\n\t</div>\n</form>\n";
-  return formhtml;
+  console.log(formhtml);
+  //return formhtml;
 }
 // Show message
 function show_message(message_text, message_type){
@@ -240,7 +244,7 @@ function hide_ipad_keyboard(){
   $('input').blur();
 }
 // Add Record button
-function addrecord_button ( colsls, app, page ) {
+function addrecord_button ( colsls, lists, app, page ) {
   $(document).on('click', '#add_record', function(e){
     e.preventDefault();
     form_inputs(colsls, 'add', '', '');
@@ -254,7 +258,7 @@ function deleterecord_button ( app, page, dt_table ) {
     //var record_name = $(this).data('name');
     if (confirm("Are you sure you want to delete this record?")){
       show_loading_message();
-      var id      = $(this).data('id');
+      var id = $(this).data('id');
       var request = getdata_ajax( 'delete_record', {'id': id, 'page': page ,'app': app} );
       request.done(function(output){
         if (output.result == 'success') {
@@ -276,16 +280,17 @@ function deleterecord_button ( app, page, dt_table ) {
   });
 }
 // Edit Record button
-function editrecord_button ( colsls, app, page ) {
+function editrecord_button ( app, page ) {
   $(document).on('click', '.function_edit a', function(e){
     e.preventDefault();
     // Get Record information from database
     show_loading_message();
-    var id      = $(this).data('id');
+    var id = $(this).data('id');
     var request = getdata_ajax( 'get_record', {'id': id, 'app': app, 'page': page} );
     request.done(function(output){
       if (output.result == 'success'){
-        form_inputs(colsls, 'edit', id, output);
+	//addedit_form ( output.colsls, output.lists );
+        form_inputs( output.colsls, 'edit', id, output.data );
         hide_loading_message();
         show_lightbox();
       } else {

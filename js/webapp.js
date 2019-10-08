@@ -121,12 +121,12 @@ $(document).ready(function(){
   });
 
   // Add Record button
-  addrecord_button ( colsls, app, page );
+  addrecord_button ( colsls, lists, app, page );
   // Add Record submit form
   record_submit ( 'add', app, page, maintable, colsls );
 
   // Edit Record button
-  editrecord_button ( colsls, app, page );
+  editrecord_button ( app, page );
   // Edit Record submit form
   record_submit ( 'edit', app, page, maintable, colsls );
   
