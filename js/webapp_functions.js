@@ -54,8 +54,7 @@ function form_inputs( colsls, action, id, data ) {
       }
     }
   });
-  //console.log( forminputs );
-  //return forminputs;
+  return $('#form_record');
 }
 function cleanserial_mulsel( formdata, colslists) {
   colslists.forEach(function(col) {
@@ -160,10 +159,10 @@ function format_header_id ( varheader, table_id ) {
   return varheader.replace("##ID##", table_id);
 }
 function addedit_form ( columnslist, lists ) {
-  var formhtml = "<h2>##blank##</h2>\n";
+  var formhtml = "<div class=\"lightbox_content\">\n"
+  formhtml += "<h2>##blank##</h2>\n";
   formhtml += "<form class=\"form add\" id=\"form_record\" data-id=\"\" novalidate>\n";
   columnslist.forEach(function(col) {
-   // console.log( eval(col["column"])  );
     if ( col["input_type"] != "noform" && col["input_type"] != "drilldown" && col["input_type"] != "crosswalk" ) {
       if ( col["required"] == "yes" ) {
         var errspan = "<span class='required'>*</span>"; 
@@ -179,30 +178,30 @@ function addedit_form ( columnslist, lists ) {
       if ( col["input_type"] == "textarea" ) {
       formhtml += "\t\t<textarea class=\"text textarea\" name=\"" + col["column"] + "\" id=\"" + col["column"] + "></textarea>\n";
       } else if ( col["input_type"] == "select" || col["input_type"] == "tableselect" ) {
-        if ( col["multiple"] == "yes" ) { var multiple = "multiple";
+        if ( col["multiple"] == "yes" ) { var multiple = " multiple";
         } else var multiple = "";
-        formhtml += "\t\t<select class=\"text\" name=\"" + col["column"] + "\" id=\"" + col["column"] + multiple + ">\n";
-        formhtml += "\t\t\t<option value=\"\">Select a " + col["title"] + "</option>\n";
-        var multisels = eval(col["column"]);
-	//multusels = multisels.split(";"); //explode(";", ${$col["column"]});
         Object.keys(lists).forEach(function(list) {
-          if ( multisels.indexOf(list["key"]) !== false ) {
-	    var selected = "selected";
-          } else var selected = "";
-	  if ( list["key"] != "selectparent" ) {
-            formhtml += "\t\t\t<option value=\"" + list["key"] + " " + selected + "\">" + list["title"] + "</option>\n";
-	  } else var selectnested = true; // this is used for cascading selects. needs to be set to false somewhere...
+	  if ( list == col["column"] ) {
+            formhtml += "\t\t<select class=\"text\" name=\"" + col["column"] + "\" id=\"" + col["column"] + "\"" + multiple + ">\n";
+            formhtml += "\t\t\t<option value=\"\">Select a " + col["title"] + "</option>\n";
+	    for ( var i = 0; i < lists[list].length; i++ ) {
+	      var selected = "";
+	      if ( list["key"] != "selectparent" ) {
+                formhtml += "\t\t\t<option value=\"" + lists[list][i].key + "\" " + selected + ">" + lists[list][i].title + "</option>\n";
+	      } else var selectnested = true; // this is used for cascading selects. needs to be set to false somewhere...
+	    }
+            formhtml += "\t\t</select>\n";
+	  }
         });
-        formhtml += "\t\t</select>\n";
       } else {
         formhtml += "\t\t<input type=\"" + col["input_type"] + "\" class=\"text\" name=\"" + col["column"] + "\" id=\"" + col["column"] + "\" value=\"\" " + errinput + ">\n";
       }
       formhtml += "\t</div>\n</div>\n";
     }
   });
-  formhtml += "\t<div class=\"button_container\">\n\t\t<button type=\"submit\">##blank##</button>\n\t</div>\n</form>\n";
-  console.log(formhtml);
-  //return formhtml;
+  formhtml += "\t<div class=\"button_container\">\n\t\t<button type=\"submit\">##blank##</button>\n\t</div>\n</form>\n</div>\n";
+  //console.log(formhtml);
+  return formhtml;
 }
 // Show message
 function show_message(message_text, message_type){
@@ -280,7 +279,9 @@ function deleterecord_button ( app, page, dt_table ) {
   });
 }
 // Edit Record button
-function editrecord_button ( app, page ) {
+function editrecord_button ( app, page, dt_table ) {
+  var colsls;
+  var recordform;
   $(document).on('click', '.function_edit a', function(e){
     e.preventDefault();
     // Get Record information from database
@@ -289,8 +290,9 @@ function editrecord_button ( app, page ) {
     var request = getdata_ajax( 'get_record', {'id': id, 'app': app, 'page': page} );
     request.done(function(output){
       if (output.result == 'success'){
-	//addedit_form ( output.colsls, output.lists );
-        form_inputs( output.colsls, 'edit', id, output.data );
+	colsls = output.colsls;
+	$(".lightbox_content").html(addedit_form ( output.colsls, output.lists ));
+        recordform = form_inputs( output.colsls, 'edit', id, output.data );
         hide_loading_message();
         show_lightbox();
       } else {
@@ -303,6 +305,8 @@ function editrecord_button ( app, page ) {
       show_message('Information request failed: ' + textStatus, 'error');
     });
   });
+  // Edit Record submit form
+  record_submit ( 'edit', app, page, dt_table, colsls, recordform );
 }
 function getdata_ajax ( job, data ) {
   return $.ajax({
@@ -314,13 +318,13 @@ function getdata_ajax ( job, data ) {
     type:         'get'
   });
 }
-function record_submit ( action, app, page, dt_table, colsls ) {
-  var recordform = $('#form_record');
-  recordform.validate();
+function record_submit ( action, app, page, dt_table, colsls, recordform ) {
+  //var recordform = $('#form_record');
   var ucaction = action.replace( /^./, action[0].toUpperCase() );
   $(document).on('submit', '#form_record.' + action, function(e){
     e.preventDefault();
     // Validate form
+    recordform.validate();
     if (recordform.valid() == true){
       // Send Record information to database
       hide_ipad_keyboard();
@@ -340,7 +344,6 @@ function record_submit ( action, app, page, dt_table, colsls ) {
           dt_table.ajax.reload(function(){
             hide_loading_message();
             //var record_name = $('#blank').val();
-            //show_message("Record '" + record_name + "' edited successfully.", 'success');
             show_message("Record " + action + "ed successfully.", 'success');
           }, true);
         } else {

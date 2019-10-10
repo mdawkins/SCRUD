@@ -125,10 +125,8 @@ $(document).ready(function(){
   // Add Record submit form
   record_submit ( 'add', app, page, maintable, colsls );
 
-  // Edit Record button
-  editrecord_button ( app, page );
-  // Edit Record submit form
-  record_submit ( 'edit', app, page, maintable, colsls );
+  // Edit Record button & submit form
+  editrecord_button ( app, page, maintable );
   
   // Delete Record
   deleterecord_button ( app, page, maintable );
