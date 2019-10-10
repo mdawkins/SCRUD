@@ -1,4 +1,3 @@
-    <!-- top menu bar --!>
     <div class="topnav" id="myTopnav">
     <ul>
      <li><a class="active" href="javascript:void(0)" onclick="openNav()"><i class="fa fa-fw fa-bars"></i>Menu</a></li>
