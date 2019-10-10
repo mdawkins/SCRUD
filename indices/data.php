@@ -227,7 +227,6 @@ $sqlsel_rows = "SELECT $table.id, $fields FROM $table $ljointables $wheres $grou
 	while ( $row = db_fetch_assoc($query) ) {
 		$k=0;
 		foreach ( $colslist as $i => $col ) {
-			$query_data[] = [ $col["column"] => $row[$col["column"]] ];
 			if ( $k == 0 )
 				$query_data[$j] = [ $col["column"] => $row[$col["column"]] ];
 			else
@@ -310,7 +309,6 @@ $sqlsel_rows = "SELECT $table.id, $fields FROM $table $ljointables $wheres $grou
 	$message  = "page_lists";
 	$query_data = [ "page" => $_GET["page"], "app" => $_GET["app"] ];
 }
-
 // Prepare data
 $data = array(
   "pginfo"  => $pageinfo,
