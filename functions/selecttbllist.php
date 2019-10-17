@@ -1,6 +1,5 @@
 <?php
 # server config
-require_once "dbconnection.php";
 $conn = db_connect($servername, $username, $password, $database);
 
 // create array for creating select dropdown list
@@ -30,6 +29,7 @@ foreach ( $selslist as $sel ) {
 			$lists[$sel["selcol"]] = $name[0];
 		}
 		unset($wherestring);
+		unset($result);
 	}
 }
 
