@@ -243,11 +243,40 @@ function hide_ipad_keyboard(){
   $('input').blur();
 }
 // Add Record button
-function addrecord_button ( colsls, lists, app, page ) {
+function addrecord_button ( app, page, dt_table ) {
   $(document).on('click', '#add_record', function(e){
     e.preventDefault();
-    form_inputs(colsls, 'add', '', '');
-    show_lightbox();
+    //
+    //form_inputs(colsls, 'add', '', '');
+    //show_lightbox();
+    //
+    //var id = $(this).data('id');
+	  // this needs to have logic added to handle if main or drilldown id
+    var id = '';
+    //var request = getdata_ajax( 'page_lists', {'id': id, 'app': app, 'page': page} );
+    var request = getdata_ajax( 'page_lists', {'app': app, 'page': page} );
+    request.done(function(output){
+      var colsls, lists, recordform;
+      if (output.result == 'success'){
+	colsls = output.colsls;
+	lists = output.lists;
+	$(".lightbox_content").html(addedit_form ( output.colsls, output.lists ));
+        recordform = form_inputs( output.colsls, 'add', '', '' );
+        hide_loading_message();
+        show_lightbox();
+        // Edit Record submit form
+        record_submit ( 'add', app, page, dt_table, colsls, recordform );
+      } else {
+        hide_loading_message();
+        show_message('Information request failed', 'error');
+      }
+    });
+    request.fail(function(jqXHR, textStatus){
+      hide_loading_message();
+      show_message('Information request failed: ' + textStatus, 'error');
+    });
+    //
+
   });
 }
 // Delete Record button
@@ -261,7 +290,7 @@ function deleterecord_button ( app, page, dt_table ) {
       var request = getdata_ajax( 'delete_record', {'id': id, 'page': page ,'app': app} );
       request.done(function(output){
         if (output.result == 'success') {
-          // Reload datable
+          // Reload datatable
           dt_table.ajax.reload(function() {
             hide_loading_message();
             show_message("Record '" + id + "' deleted successfully.", 'success');
@@ -280,8 +309,6 @@ function deleterecord_button ( app, page, dt_table ) {
 }
 // Edit Record button
 function editrecord_button ( app, page, dt_table ) {
-  var colsls;
-  var recordform;
   $(document).on('click', '.function_edit a', function(e){
     e.preventDefault();
     // Get Record information from database
@@ -289,12 +316,15 @@ function editrecord_button ( app, page, dt_table ) {
     var id = $(this).data('id');
     var request = getdata_ajax( 'get_record', {'id': id, 'app': app, 'page': page} );
     request.done(function(output){
+      var colsls, recordform;
       if (output.result == 'success'){
 	colsls = output.colsls;
 	$(".lightbox_content").html(addedit_form ( output.colsls, output.lists ));
         recordform = form_inputs( output.colsls, 'edit', id, output.data );
         hide_loading_message();
         show_lightbox();
+        // Edit Record submit form
+        record_submit ( 'edit', app, page, dt_table, colsls, recordform );
       } else {
         hide_loading_message();
         show_message('Information request failed', 'error');
@@ -305,8 +335,6 @@ function editrecord_button ( app, page, dt_table ) {
       show_message('Information request failed: ' + textStatus, 'error');
     });
   });
-  // Edit Record submit form
-  record_submit ( 'edit', app, page, dt_table, colsls, recordform );
 }
 function getdata_ajax ( job, data ) {
   return $.ajax({

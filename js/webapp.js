@@ -39,7 +39,7 @@ $(document).ready(function(){
     "ajax": {
       "url":          'data.php?job=get_records',
       "cache":        false,
-      "data":         {'app': app, 'page': page},
+      "data":         {'app': app, 'page': page, 'dt_table': 'maintable'},
       "dataType":     'json',
       "contentType":  'application/json; charset=utf-8',
       "type":         'get'
@@ -120,10 +120,8 @@ $(document).ready(function(){
     maintable.colReorder.reset();
   });
 
-  // Add Record button
-  addrecord_button ( colsls, lists, app, page );
-  // Add Record submit form
-  record_submit ( 'add', app, page, maintable, colsls );
+  // Add Record button & submit form
+  addrecord_button ( app, page, maintable );
 
   // Edit Record button & submit form
   editrecord_button ( app, page, maintable );
@@ -168,7 +166,7 @@ if ( issetdrilldown === 1 ) {
         $(document).on('click', '.function_drilldown a', function(e){
           e.preventDefault();
           // Get Child Records linked to id
-          var id	= $(this).data('id');
+          var id = $(this).data('id');
           //var subpage	= $(this).data('name'); // duplicate 
     
           var tr = $(this).closest('tr');
@@ -195,7 +193,7 @@ if ( issetdrilldown === 1 ) {
             "ajax": {
               "url":          'data.php?job=get_records',
               "cache":        true,
-              "data":         {'id': id ,'subpage': subpage, 'app': app, 'page': page},
+              "data":         {'id': id , 'app': app, 'page': subpage, 'dt_table': subpage},
               "dataType":     'json',
               "contentType":  'application/json; charset=utf-8',
 	      "type":         'get'
