@@ -121,13 +121,13 @@ $(document).ready(function(){
   });
 
   // Add Record button & submit form
-  addrecord_button ( app, page, maintable );
+  addeditdel_record ( 'add' );
 
   // Edit Record button & submit form
-  editrecord_button ( app, page, maintable );
+  addeditdel_record ( 'edit' );
   
   // Delete Record
-  deleterecord_button ( app, page, maintable );
+  addeditdel_record ( 'delete' );
     
 //For each child table
 for ( var i = 0; i < colsls.length; i++ ) {

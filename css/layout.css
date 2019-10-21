@@ -371,7 +371,7 @@ table.datatable thead .topfunc_buttons li {
   float: left;
   padding: 0 10px 0 0;
 }
-table.datatable thead .topfunc_buttons li.function_addrecord {
+table.datatable thead .topfunc_buttons li.function_add {
   padding: 0;
 }
 table.datatable thead .topfunc_buttons a {
@@ -392,7 +392,7 @@ table.datatable thead .topfunc_buttons .function_reordercols a:before {
   font-size: 1.1rem;
   content: "\f0e2";
 }
-table.datatable thead .topfunc_buttons .function_addrecord a:before {
+table.datatable thead .topfunc_buttons .function_add a:before {
   font-size: 1.2rem;
   line-height: 30px;
   content: "\f067";
