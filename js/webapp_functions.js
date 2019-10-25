@@ -217,30 +217,30 @@ function addeditdel_record ( action ) {
 	let searchParams = new URLSearchParams(window.location.search);
 	let app = searchParams.get('app');
 	let page = searchParams.get('page');
-	var id, dt_table;
+	var id, dt_table, configpage;
 	
 	$(document).on('click', '.function_' + action + ' a', function(e){
 		e.preventDefault();
 		if ( action == 'add' ) {
 			var job = 'page_lists';
 			id = "";
-			var configpage = page;
+			configpage = page;
 			dt_table = 'table_records';
 		} else if ( action == 'edit' ) {
 			var job = 'get_record';
 			show_loading_message();
 			id = $(this).data('id');
-			var configpage = page;
+			configpage = page;
 			if ( $(this).data('name') != 'maintable' ) {
-				var configpage = $(this).data('name');
+				configpage = $(this).data('name');
 			}
 			dt_table = $(this).closest('table').attr('id');
 		} else if ( action == 'delete' ) {
 			if (confirm("Are you sure you want to delete this record?")) {
 				var job = 'delete_record';
 				show_loading_message();
-				var id = $(this).data('id');
-				var configpage = page; // un-hardcode this
+				id = $(this).data('id');
+				configpage = page; // un-hardcode this
 				dt_table = 'table_records'; // un-hardcode this
 			} else {
 				return;
@@ -257,7 +257,7 @@ function addeditdel_record ( action ) {
 	  				colsls = output.colsls;
 	  				data = output.data;
 	  				$(".lightbox_content").html(addedit_form ( output.colsls, output.lists ));
-					//
+
 					if ( action == 'add' ) {
 						id, data = '';
 					} else if ( action == 'delete' ) {
@@ -291,7 +291,7 @@ function addeditdel_record ( action ) {
 						}
 					});
 					recordform = $('#form_record');
-					//
+
 					// Add or Edit Record submit form
 					hide_loading_message();
 					show_lightbox();
@@ -312,13 +312,12 @@ function addeditdel_record ( action ) {
 			show_message('Information request failed: ' + textStatus, 'error');
 		});
 	});
-	//
+
 	$(document).on('submit', '#form_record.' + action, function(e){
 		e.preventDefault();
 		var ucaction = action.replace( /^./, action[0].toUpperCase() );
 		recordform = $('#form_record');
 		// Validate form
-		console.log( action + ' : ' + page + ' : ' + dt_table + ' : ' + id );
 		recordform.validate();
 		if (recordform.valid() == true){
 			// Send Record information to database
@@ -328,11 +327,12 @@ function addeditdel_record ( action ) {
 			var form_data = $('#form_record').serialize();
 			form_data = cleanserial_mulsel( form_data, colsls );
 			if ( action == 'add' ) {
-				var request = getdata_ajax( 'add_record', form_data + '&app=' + app + '&page=' + page );
+				var request = getdata_ajax( 'add_record', form_data + '&app=' + app + '&page=' + configpage );
 			} else if ( action == "edit" ) {
 				var id = $('#form_record').attr('data-id');
-				var request = getdata_ajax( 'edit_record', form_data + '&id=' + id + '&app=' + app + '&page=' + page );
+				var request = getdata_ajax( 'edit_record', form_data + '&id=' + id + '&app=' + app + '&page=' + configpage );
 			}
+			//console.log( action + ' : ' + page + ' : ' + configpage + ' : ' + dt_table + ' : ' + id );
 			request.done(function(output){
 				if (output.result == 'success'){
 					// Reload datatable
@@ -351,7 +351,6 @@ function addeditdel_record ( action ) {
 			});
 		}
 	});
-	//
 }
 function getdata_ajax ( job, data ) {
 	return $.ajax({
