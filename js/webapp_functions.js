@@ -94,7 +94,7 @@ function rw_fmt ( lists, rowfmt ) {
 	});
 	return coltype;
 }
-function dt_header ( columnslist, lists, tableid, showrownum, showdeletecolumn ) {
+function dt_header ( columnslist, tableid, showrownum, showdeletecolumn, id, page ) {
 	var showfilter = "no";
 	var headerhtml = "<table class=\"datatable\" id=\"" + tableid + "\">\n<thead>\n\t<tr>\n";
 	var filterhtml = "\t<tr>\n";
@@ -102,6 +102,12 @@ function dt_header ( columnslist, lists, tableid, showrownum, showdeletecolumn )
 		headerhtml += "\t\t<th>No.</th>\n";
 		filterhtml += "\t\t<th class=\"filter_content\"></th>\n";
 	}
+	if ( id !== undefined ) {
+		var dataid = "data-id=\"" + id + "\"";
+	} else { var dataid = ""; }
+	if ( page !== undefined ) {
+		var dataname = "data-name=\"" + page + "\"";
+	} else { var dataname = ""; }
 	columnslist.forEach(function(col) {
 		if ( col["filterbox"] != "" ) { showfilter = "yes"; }
 		if ( col["input_type"] != "crosswalk" ) {
@@ -115,7 +121,7 @@ function dt_header ( columnslist, lists, tableid, showrownum, showdeletecolumn )
 		if ( tableid == "maintable" ) {
 			headerhtml += "\t\t\t\t<li id=\"reset\" class=\"function_reordercols\"><a><span title=\"Reorder Columns\">Reorder</span></a></li>\n\n";
 		}
-		headerhtml += "\t\t\t\t<li id=\"add_record\" class=\"function_add\"><a><span title=\"Add Record\">Add</span></a></li>\n";
+		headerhtml += "\t\t\t\t<li id=\"add_record\" class=\"function_add\"><a " + dataid + " " + dataname + "><span title=\"Add Record\">Add</span></a></li>\n";
 		headerhtml += "\t\t\t</ul></div>\n\t\t</th>\n";
 	}
 	if ( tableid == "maintable" ) {
@@ -228,9 +234,14 @@ function addeditdel_record ( action ) {
 			id = "";
 			configpage = page;
 			dt_table = 'table_records';
+			if ( $(this).data('name') !== undefined ) {
+				id = $(this).data('id');
+				configpage = $(this).data('name');
+				dt_table = $(this).closest('table').attr('id');
+			}
 		} else if ( action == 'edit' ) {
-			var job = 'get_record';
 			show_loading_message();
+			var job = 'get_record';
 			id = $(this).data('id');
 			configpage = page;
 			if ( $(this).data('name') != 'maintable' ) {

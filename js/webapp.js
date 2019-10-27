@@ -24,7 +24,7 @@ $(document).ready(function() {
 			rowfmt = output.rowfmt;
 		}
 		// Populate maintable header
-		$("#table_records").html(dt_header( colsls, lists, 'maintable', showrownum , showdeletecolumn ));
+		$("#table_records").html(dt_header( colsls, 'maintable', showrownum , showdeletecolumn ));
 
 		// On page load: datatable
 		var maintable = $('#table_records').DataTable({
@@ -157,8 +157,6 @@ $(document).ready(function() {
 							ch_lists = output.lists;
 							ch_rowfmt = output.rowfmt;
 						}
-						var varheader = [];
-						varheader[subpage] = dt_header( ch_colsls, ch_lists, subpage + '_##ID##', '', showdeletecolumn );
 						var tablecount=1;
 
 						// Show Drill Down table
@@ -177,8 +175,7 @@ $(document).ready(function() {
 								tr.removeClass('collapse');
 							} else {
 								// Open this row
-								var childheader =  varheader[subpage];
-								row.child( format_header_id( childheader, tablecount ) ).show();
+								row.child( format_header_id( dt_header( ch_colsls, subpage + '_##ID##', '', showdeletecolumn, id, subpage ), tablecount ) ).show();
 								tr.addClass('collapse');
 							}
 							//show_loading_message();
