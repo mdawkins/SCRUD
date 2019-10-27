@@ -169,7 +169,6 @@ if ( !empty($_GET["page"]) ) {
 						} elseif ( $col["input_type"] == "drilldown" ) {
 							$row[$col["column"]] = '<div class="function_buttons"><ul>';
 							$row[$col["column"]] .= '<li class="function_drilldown"><a data-id="'.$row["id"].'" data-name="'.$col["column"].'"><span>Show</span></a></li>';
-							$row[$col["column"]] .= '<li class="function_adddrilldown"><a data-id="'.$row["id"].'" data-name="'.$row["column"].'"><span>Add</span></a></li>';
 							$row[$col["column"]] .= '</ul></div>';
 						} elseif ( $col["input_type"] == "crosswalk" ) {
 							continue;

@@ -110,11 +110,13 @@ function dt_header ( columnslist, lists, tableid, showrownum, showdeletecolumn )
 		}
 	});
 	if ( showdeletecolumn != "no" ) {
-		headerhtml += "\t\t<th>Functions</th>\n";
-		filterhtml += "\t\t<th>\n\t\t\t<div class=\"topfunc_buttons\"><ul>\n";
-		filterhtml += "\t\t\t\t<li id=\"reset\" class=\"function_reordercols\"><a><span title=\"Reorder Columns\">Reorder</span></a></li>\n\n";
-		filterhtml += "\t\t\t\t<li id=\"add_record\" class=\"function_add\"><a><span title=\"Add Record\">Add</span></a></li>\n";
-		filterhtml += "\t\t\t</ul></div>\n\t\t</th>\n";
+		filterhtml += "\t\t<th></th>\n";
+		headerhtml += "\t\t<th>\n\t\t\t<div class=\"topfunc_buttons\"><ul>\n";
+		if ( tableid == "maintable" ) {
+			headerhtml += "\t\t\t\t<li id=\"reset\" class=\"function_reordercols\"><a><span title=\"Reorder Columns\">Reorder</span></a></li>\n\n";
+		}
+		headerhtml += "\t\t\t\t<li id=\"add_record\" class=\"function_add\"><a><span title=\"Add Record\">Add</span></a></li>\n";
+		headerhtml += "\t\t\t</ul></div>\n\t\t</th>\n";
 	}
 	if ( tableid == "maintable" ) {
 		headerhtml += "\t</tr>\n";
