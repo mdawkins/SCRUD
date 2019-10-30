@@ -204,8 +204,8 @@ button.button:active {
 //  bottom: 0;
   right: 0;
   background-color: #999;
-  font-family: 'FontAwesome', Arial, Helvetica, sans-serif;
-  font-weight: normal;
+  font-family: 'Font Awesome 5 Free', Arial, Helvetica, sans-serif;
+  font-weight: 900;
   font-size: 1.2rem;
   line-height: 30px;
   text-align: center;
@@ -277,7 +277,8 @@ button.button:active {
 }
 .dataTables_paginate a.previous,
 .dataTables_paginate a.next {
-  font-family: 'FontAwesome', Arial, Helvetica, sans-serif;
+  font-family: 'Font Awesome 5 Free', Arial, Helvetica, sans-serif;
+  font-weight: 900;
   font-size: 1.2rem;
   line-height: 30px;
 }
@@ -378,8 +379,8 @@ table.datatable thead .topfunc_buttons a {
   height: 30px;
   display: inline-block;
   background-color: #999;
-  font-family: 'FontAwesome', Arial, Helvetica, sans-serif;
-  font-weight: normal;
+  font-family: 'Font Awesome 5 Free', Arial, Helvetica, sans-serif;
+  font-weight: 900;
   line-height: 29px;
   text-align: center;
   color: #fff;
@@ -395,6 +396,10 @@ table.datatable thead .topfunc_buttons .function_add a:before {
   font-size: 1.2rem;
   line-height: 30px;
   content: "\f067";
+}
+table.datatable thead .topfunc_buttons .function_attach a:before {
+  font-size: 1.1rem;
+  content: "\f0c6";
 }
 table.datatable thead .topfunc_buttons a:hover,
 table.datatable thead .topfunc_buttons a:active,
@@ -419,8 +424,8 @@ table.datatable tbody td.functions .function_buttons a {
   height: 30px;
   display: inline-block;
   background-color: #999;
-  font-family: 'FontAwesome', Arial, Helvetica, sans-serif;
-  font-weight: normal;
+  font-family: 'Font Awesome 5 Free', Arial, Helvetica, sans-serif;
+  font-weight: 900;
   line-height: 29px;
   text-align: center;
   color: #fff;
@@ -429,8 +434,9 @@ table.datatable tbody td.functions .function_buttons a {
   border-radius:         6px;
 }
 table.datatable tbody td.functions .function_buttons .function_edit a:before {
+  font-weight: 400;
   font-size: 1.1rem;
-  content: "\f040";
+  content: "\f044";
 }
 table.datatable tbody td.functions .function_buttons .function_delete a:before {
   font-size: 1.2rem;
@@ -443,11 +449,6 @@ table.datatable tbody td.functions .function_buttons .function_drilldown a:befor
 }
 table.datatable tbody .collapse td.functions .function_buttons .function_drilldown a:before {
   content: "\f061";
-}
-table.datatable tbody td.functions .function_buttons .function_adddrilldown a:before {
-  font-size: 1.2rem;
-  line-height: 30px;
-  content: "\f067";
 }
 table.datatable tbody td.functions .function_buttons a:hover,
 table.datatable tbody td.functions .function_buttons a:active,
@@ -550,20 +551,17 @@ table.datatable thead th.filter_content {
   position: absolute;
 //top: 45px;
   right: 5px;
-  font-family: 'FontAwesome', Arial, Helvetica, sans-serif;
-  font-weight: normal;
+  font-family: 'Font Awesome 5 Free', Arial, Helvetica, sans-serif;
+  font-weight: 400;
   font-size: 20px;
   line-height: 25px;
   text-align: center;
   color: #f70;
   cursor: pointer;
-  border: 2px solid #f70;
-  -webkit-border-radius: 25px;
-  -moz-border-radius:    25px;
-  border-radius:         25px;
 }
 .lightbox_close:before {
-  content: '\f00d';
+  font-size: 1.5rem;
+  content: '\f057';
 }
 .lightbox_close:hover {
   color: #333;
@@ -661,18 +659,18 @@ table.datatable thead th.filter_content {
   position: absolute;
   bottom: 0;
   right: -25px;
-  font-family: 'FontAwesome', Arial, Helvetica, sans-serif;
-  font-weight: normal;
+  font-family: 'Font Awesome 5 Free', Arial, Helvetica, sans-serif;
+  font-weight: 400;
   font-size: 20px;
   line-height: 25px;
   text-align: center;
 }
 .lightbox_content .input_container .field_container.error:after {
-  content: '\f00d';
+  content: '\f057';
   color: #c00;
 }
 .lightbox_content .input_container .field_container.valid:after {
-  content: '\f00c';
+  content: '\f058';
   color: #090;
 }
 
@@ -734,7 +732,7 @@ table.datatable thead th.filter_content {
   top: 0;
   left: 0;
   background-color: #f70;
-  font-family: 'FontAwesome', Arial, Helvetica, sans-serif;
+  font-family: 'Font Awesome 5 Free', Arial, Helvetica, sans-serif;
   font-weight: normal;
   font-size: 12px;
   line-height: 20px;
@@ -746,11 +744,11 @@ table.datatable thead th.filter_content {
 }
 #message.success  p:before,
 #noscript.success p:before {
-  content: '\f00c';
+  content: '\f058';
 }
 #message.error  p:before,
 #noscript.error p:before {
-  content: '\f00d';
+  content: '\f057';
 }
 
 /* Loading message ------------------------------------------------------------------------------ */
@@ -796,8 +794,8 @@ table.datatable thead th.filter_content {
   position: absolute;
   top: 80px;
   left: 0;
-  font-family: 'FontAwesome', Arial, Helvetica, sans-serif;
-  font-weight: normal;
+  font-family: 'Font Awesome 5 Free', Arial, Helvetica, sans-serif;
+  font-weight: 900;
   font-size: 4rem;
   line-height: 4rem;
   text-align: center;

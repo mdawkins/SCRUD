@@ -122,6 +122,9 @@ function dt_header ( columnslist, tableid, showrownum, showdeletecolumn, id, pag
 			headerhtml += "\t\t\t\t<li id=\"reset\" class=\"function_reordercols\"><a><span title=\"Reorder Columns\">Reorder</span></a></li>\n\n";
 		}
 		headerhtml += "\t\t\t\t<li id=\"add_record\" class=\"function_add\"><a " + dataid + " " + dataname + "><span title=\"Add Record\">Add</span></a></li>\n";
+		if ( tableid != "maintable" ) {
+			headerhtml += "\t\t\t\t<li id=\"attach_record\" class=\"function_attach\"><a><span title=\"Attach Record\">Attach</span></a></li>\n\n";
+		}
 		headerhtml += "\t\t\t</ul></div>\n\t\t</th>\n";
 	}
 	if ( tableid == "maintable" ) {
@@ -136,8 +139,7 @@ function format_header_id ( varheader, table_id ) {
 	return varheader.replace("##ID##", table_id);
 }
 function addedit_form ( columnslist, lists ) {
-	var formhtml = "<div class=\"lightbox_content\">\n"
-	formhtml += "<h2>##blank##</h2>\n";
+	var formhtml = "<h2>##blank##</h2>\n";
 	formhtml += "<form class=\"form add\" id=\"form_record\" data-id=\"\" novalidate>\n";
 	columnslist.forEach(function(col) {
 		if ( col["input_type"] != "noform" && col["input_type"] != "drilldown" && col["input_type"] != "crosswalk" ) {
@@ -176,7 +178,7 @@ function addedit_form ( columnslist, lists ) {
 			formhtml += "\t</div>\n</div>\n";
 		}
 	});
-	formhtml += "\t<div class=\"button_container\">\n\t\t<button type=\"submit\">##blank##</button>\n\t</div>\n</form>\n</div>\n";
+	formhtml += "\t<div class=\"button_container\">\n\t\t<button type=\"submit\">##blank##</button>\n\t</div>\n</form>\n";
 	//console.log(formhtml);
 	return formhtml;
 }
