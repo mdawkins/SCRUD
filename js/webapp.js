@@ -7,7 +7,7 @@ $(document).ready(function() {
 	let app = searchParams.get('app');
 
 	// set variables needed for maintable
-	var pginfo, colsls, lists, rowfmt;
+	var pginfo, colsls, lists, rowfmt, sql;
 	var pagetitle, table, showidcolumn, showrownum, showdeletecolumn, colorderby, rowlimit;
 	var jsondtcolumns, jsonfiltercolumns, rwfmt;
 
@@ -23,6 +23,8 @@ $(document).ready(function() {
 			lists = output.lists;
 			rowfmt = output.rowfmt;
 		}
+		// Set page title
+		document.title = pagetitle;
 		// Populate maintable header
 		$("#table_records").html(dt_header( colsls, 'maintable', showrownum , showdeletecolumn ));
 

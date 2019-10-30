@@ -226,9 +226,25 @@ if ( !empty($_GET["page"]) ) {
 			// Add Record
 			$query = "INSERT INTO $table SET ";
 			foreach ( $colslist as $i => $col ) {
-				if ( isset($_GET[$col["column"]]) ) { $query .= $col["column"]." = '".addslashes($_GET[$col["column"]])."', "; }
+				if ( isset($_GET[$col["column"]]) && empty($_GET[$col["column"]]) ) {
+					$query .= $col["column"]." = NULL, ";
+				} elseif ( isset($_GET[$col["column"]]) ) {
+					$query .= $col["column"]." = '".addslashes($_GET[$col["column"]])."', ";
+				}
+				if ( $col["input_type"] == "crosswalk" ) {
+					$crosswalk = 1;
+					foreach ( $selslist as $k => $sel ) {
+						if ( $col["column"] == $sel["selcol"] ) {
+							$selid = $sel["selid"];
+							$wherekey = $sel["wherekey"];
+							$seltable = $sel["seltable"];
+							$getid = addslashes($_GET["id"]);
+						}
+					}
+				}
 			}
 			$query = rtrim($query, ', ');
+			$sqlstatement = $query; // for debugging
 			$query = db_query($query);
 			if ( !$query ) {
 				$result = "error";
@@ -236,7 +252,11 @@ if ( !empty($_GET["page"]) ) {
 			} else {
 				$result = "success";
 				$message = "query success";
-				$lastid = $query->insert_id;
+				$lastid = mysqli_insert_id($conn);
+				if ( is_numeric($getid) && $crosswalk == 1 ) { // selid == lastid; wherekey == _GET["id"]; seltable == table; input_type == "crosswalk"
+					$sqlstatement = "INSERT INTO $seltable $selid = '$lastid', $wherekey = '$getid'";
+					$query = db_query($sqlstatement);
+				}
 			}
 
 		} elseif ( $job == "edit_record" ) {
@@ -247,7 +267,9 @@ if ( !empty($_GET["page"]) ) {
 			} else {
 				$query = "UPDATE $table SET ";
 				foreach ( $colslist as $i => $col ) {
-					if ( isset($_GET[$col["column"]]) ) {
+					if ( isset($_GET[$col["column"]]) && empty($_GET[$col["column"]]) ) {
+						$query .= $col["column"]." = NULL, ";
+					} elseif ( isset($_GET[$col["column"]]) ) {
 						$query .= $col["column"]." = '".addslashes($_GET[$col["column"]])."', ";
 					} elseif ( !isset($_GET[$col["column"]]) && $col["input_type"] == "checkbox" ) {
 						$query .= $col["column"]." = '0', ";
@@ -296,7 +318,7 @@ if ( !empty($_GET["page"]) ) {
 		"colsls"  => $colslist,
 		"lists"   => $lists,
 		"rowfmt"  => $rowformat,
-		//"sql"     => $sqlsel_rows,
+		"sql"     => $sqlstatement,
 		"result"  => $result,
 		"message" => $message,
 		"data"    => $query_data,

@@ -45,6 +45,23 @@ function db_query($query) {
 	return $result;
 }
 
+function db_insert_id() {
+	global $conn;
+	global $service;
+	unset($result);
+	if ( $service == "mysql" ) {
+		if( !($lastid = mysqli_insert_id($conn)) ) {
+			$result = "error";
+		}
+	} elseif ( $service == "oracle" ) {
+		// http://hustatyova.blogspot.com/2012/06/last-insert-id-with-php-oracle.html
+		// INSERT INTO myTable (...) VALUES ( ...)
+			// RETURNING RowId INTO :p_val
+		//oci_bind_by_name($statement, ":p_val", $val, 18);
+	}
+	return $lastid;
+}
+
 function db_fetch_assoc($result) {
 	global $service;
 	unset($row);

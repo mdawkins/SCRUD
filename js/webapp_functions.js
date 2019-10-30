@@ -259,12 +259,11 @@ function addeditdel_record ( action ) {
 				return;
 			}
 		}
-		//console.log( action + ' : ' + page + ' : ' + configpage + ' : ' + dt_table + ' : ' + id );
+		console.log( action + ' : ' + page + ' : ' + configpage + ' : ' + dt_table + ' : ' + id );
 
 		// Get Record information from database
 		var request = getdata_ajax( job, {'id': id, 'app': app, 'page': configpage} );
 		request.done(function(output){
-			//var colsls, recordform;
 			if (output.result == 'success') {
 				if ( action != 'delete' ) {
 	  				colsls = output.colsls;
@@ -303,9 +302,6 @@ function addeditdel_record ( action ) {
 							}
 						}
 					});
-					recordform = $('#form_record');
-
-					// Add or Edit Record submit form
 					hide_loading_message();
 					show_lightbox();
 				} else {
@@ -339,14 +335,12 @@ function addeditdel_record ( action ) {
 			show_loading_message();
 			var form_data = $('#form_record').serialize();
 			form_data = cleanserial_mulsel( form_data, colsls );
-			if ( action == 'add' ) {
-				var request = getdata_ajax( 'add_record', form_data + '&app=' + app + '&page=' + configpage );
-			} else if ( action == "edit" ) {
-				var id = $('#form_record').attr('data-id');
-				var request = getdata_ajax( 'edit_record', form_data + '&id=' + id + '&app=' + app + '&page=' + configpage );
+			if ( action == 'add' || action == 'edit' ) {
+				var request = getdata_ajax( action + '_record', form_data + '&id=' + id + '&app=' + app + '&page=' + configpage );
 			}
-			//console.log( action + ' : ' + page + ' : ' + configpage + ' : ' + dt_table + ' : ' + id );
+			console.log( action + ' : ' + page + ' : ' + configpage + ' : ' + dt_table + ' : ' + id );
 			request.done(function(output){
+				console.log( 'sql: ' + output.sql + ' ; lastid: ' + output.lastid );
 				if (output.result == 'success'){
 					// Reload datatable
 					$("#" + dt_table).DataTable().ajax.reload(function(){

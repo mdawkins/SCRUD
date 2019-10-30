@@ -1,19 +1,7 @@
-<?php
-
-if ( isset($_GET["page"]) ) {
-	require_once "pages/".$_GET["page"].".php";
-	$addgetvar = "&page=".$_GET["page"];
-	if ( !empty($_GET["app"]) ) {
-		$addgetvar .= "&app=".$_GET["app"];
-	}	
-	if ( empty($pagetitle) ) { $pagetitle = "Missing Title"; }
-}
-?>
-
 <!doctype html>
 <html lang="en" dir="ltr">
   <head>
-  <title><?php echo $pagetitle; ?></title>
+  <title></title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=1000, initial-scale=1">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
