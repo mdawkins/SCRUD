@@ -294,6 +294,7 @@ if ( !empty($_GET["page"]) ) {
 				$message = "id missing";
 			} else {
 				$query = "DELETE FROM $table WHERE id = '".addslashes($id)."'";
+				$sqlstatement = $query;
 				$query = db_query($query);
 				if ( !$query ) {
 					$result = "error";

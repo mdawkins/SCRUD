@@ -255,6 +255,10 @@ function addeditdel_record ( action ) {
 				id = $(this).data('id');
 				configpage = page; // un-hardcode this
 				dt_table = 'table_records'; // un-hardcode this
+				if ( $(this).data('name') != 'maintable' ) {
+					configpage = $(this).data('name');
+					dt_table = $(this).closest('table').attr('id');
+				}
 			} else {
 				return;
 			}
@@ -305,7 +309,8 @@ function addeditdel_record ( action ) {
 					hide_loading_message();
 					show_lightbox();
 				} else {
-					// Reload datatable
+					// Reload datatable on delete
+					console.log( 'sql: ' + output.sql );
 					$("#" + dt_table).DataTable().ajax.reload(function(){
 						hide_loading_message();
 						show_message("Record " + action + "d successfully.", 'success');
