@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en" dir="ltr">
 	<head>
-	<title>Loading...</title>
+		<title>Loading...</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=1000, initial-scale=1">
 		<meta http-equiv="X-UA-Compatible" content="IE=Edge">
@@ -17,15 +17,9 @@
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.8/css/select2.min.css">
 		
 		<link rel="stylesheet" href="/css/layout.css">
-<?php 
-if ( isset($rowformat) ) {
-	include_once "$approot/functions/cssstyle.php";
-	echo rowformat( $rowformat, '#fff', '#ddd', '#ffd' );
-}
-?>
 		<link rel="stylesheet" href="/css/topmenubar.css">
 		<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Oxygen:400,700">
-	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.11.2/css/all.css">
+		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.11.2/css/all.css">
 
 		<script charset="utf-8" src="/js/topnav.js"></script>
 		<script charset="utf-8" src="/js/webapp_functions.js"></script>
