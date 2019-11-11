@@ -376,3 +376,45 @@ function getdata_ajax ( job, data ) {
 		type:				 'get'
 	});
 }
+function splitHexColor ( hexColor ) {
+	var hexcolor = hexColor.replace(/^#/, '');
+	var hexlen = hexcolor.length;
+	if ( hexlen == 3 ) {
+		var hexsplit = hexcolor.split('');
+		for ( var j = 0; j < hexsplit.length; j++ ) {
+			hexsplit[j] = hexsplit[j] + hexsplit[j];
+		}
+	} else if ( hexlen == 6 ) {
+		hexsplit = hexcolor.match(/.{2}/g);
+	}
+	return hexsplit;
+}
+function blendRowColors ( basecolor, rowcolor) {
+	var hexsp = [];
+	for ( var i = 0; i < arguments.length; i++ ) {
+		hexsp[i] = splitHexColor( arguments[i] );
+	}
+	var hccmb = [];
+	for ( var k = 0; k < hexsp[0].length; k++ ) {
+		hccmb[k] = Math.round((parseInt(hexsp[0][k], 16) + parseInt(hexsp[1][k], 16)) / 2 ).toString(16);
+	}
+	var hccomb = '#' + hccmb.join('');
+	return hccomb;
+}
+function rowformat ( rowfmt, bgcolorodd, bgcoloreven, bgcolorhover ) {
+	var cssstyle = "<style>\n";
+	rowfmt.forEach(function(rfm) {
+		var rfmvalue = rfm["value"];
+		var rfmbgcolor = rfm["background-color"];
+		var rfmbgcoloreven = blendRowColors(bgcoloreven, rfmbgcolor);
+		var rfmbgcolorhover = blendRowColors(bgcolorhover, rfmbgcolor);
+		cssstyle += "table.datatable tbody tr.color" + rfmvalue + ".odd {\n";
+		cssstyle += "  background-color: " + rfmbgcolor + ";\n}\n";
+		cssstyle += "table.datatable tbody tr.color" + rfmvalue + ".even {\n";
+		cssstyle += "  background-color: " + rfmbgcoloreven + ";\n}\n";
+		cssstyle += "table.datatable tbody tr.color" + rfmvalue + ":hover {\n";
+		cssstyle += "  background-color: " + rfmbgcolorhover + ";\n}\n";
+	});
+	cssstyle += "</style>\n";
+	return cssstyle;
+}
