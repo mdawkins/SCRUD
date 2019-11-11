@@ -135,6 +135,7 @@ if ( !empty($_GET["page"]) ) {
 
 			// Get Records
 			$query = $sqlsel_rows;
+			$sqlstatement = $sqlsel_rows;
 			$query = db_query($query);
 			if (!$query) {
 				$result = "error";
@@ -253,8 +254,9 @@ if ( !empty($_GET["page"]) ) {
 				$result = "success";
 				$message = "query success";
 				$lastid = mysqli_insert_id($conn);
-				if ( is_numeric($getid) && $crosswalk == 1 ) { // selid == lastid; wherekey == _GET["id"]; seltable == table; input_type == "crosswalk"
-					$sqlstatement = "INSERT INTO $seltable $selid = '$lastid', $wherekey = '$getid'";
+				if ( is_numeric($getid) && $crosswalk == 1 ) {
+					// selid == lastid; wherekey == _GET["id"]; seltable == table; input_type == "crosswalk"
+					$sqlstatement = "INSERT INTO $seltable SET $selid = '$lastid', $wherekey = '$getid'";
 					$query = db_query($sqlstatement);
 				}
 			}
@@ -318,6 +320,7 @@ if ( !empty($_GET["page"]) ) {
 		"pginfo"  => $pageinfo,
 		"colsls"  => $colslist,
 		"lists"   => $lists,
+		"selslist"  => $selslist,
 		"rowfmt"  => $rowformat,
 		"sql"     => $sqlstatement,
 		"result"  => $result,
