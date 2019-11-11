@@ -28,6 +28,11 @@ $(document).ready(function() {
 		// Populate maintable header
 		$("#table_records").html(dt_header( colsls, 'maintable', showrownum , showdeletecolumn ));
 
+		// Set CSS for rowformat
+		if ( rowfmt !== undefined ) {
+			$("head").append( rowformat( rowfmt, '#fff', '#ddd', '#ffd' ) );
+		}
+
 		// On page load: datatable
 		var maintable = $('#table_records').DataTable({
 			"bStateSave": true, // Save the state of the page at reload
@@ -62,15 +67,13 @@ $(document).ready(function() {
 			},
 			"columns": json_dtcolumns( colsls, showrownum, showdeletecolumn ),
 			"order": function( ) { if ( showrownum == "yes" ) { return "[[ 1, 'asc' ]]"; } },
-			"aoColumnDefs": [
-				{ "bSortable": false, "aTargets": [-1] }
-			],
+			"aoColumnDefs": [ { "bSortable": false, "aTargets": [-1] } ],
 			"lengthMenu": [[15, 50, 100, -1], [15, 50, 100, "All"]],
 			"oLanguage": {
 				"oPaginate": { "sFirst": " ", "sPrevious": " ", "sNext": " ", "sLast": " ", },
-				"sLengthMenu":    "Records per page: _MENU_",
-				"sInfo":					"Displaying _START_ to _END_ / _TOTAL_ Total",
-				"sInfoFiltered":  "(filtered from _MAX_ total records)"
+				"sLengthMenu": "Records per page: _MENU_",
+				"sInfo": "Displaying _START_ to _END_ / _TOTAL_ Total",
+				"sInfoFiltered": "(filtered from _MAX_ total records)"
 			}
 		});
 		yadcf.init(maintable, filter_columns( colsls, showrownum ),
@@ -130,6 +133,9 @@ $(document).ready(function() {
 
 		// Delete Record
 		addeditdel_record( 'delete' );
+
+		// Attach Record
+		addeditdel_record( 'attach' );
 
 		//For each child table
 		for ( var i = 0; i < colsls.length; i++ ) {
@@ -196,6 +202,7 @@ $(document).ready(function() {
 									"type": 'get'
 									},
 								"columns": json_dtcolumns( ch_colsls, 'no', showdeletecolumn ),
+								"aoColumnDefs": [ { "bSortable": false, "aTargets": [-1] } ],
 							});
 							tablecount++;
 						});
