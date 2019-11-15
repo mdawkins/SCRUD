@@ -9,17 +9,14 @@ if ( !empty($_GET["page"]) ) {
 	// Database details
 	require_once ".serv.conf";
 	require_once "$funcroot/dbconnection.php";
-	// does input_type == tableselect?
-	if ( array_search( "tableselect", array_column( $colslist, "input_type" ) ) !== null ) {
-		// selecttbllist converts sellists to lists from querying the DB
-		require_once "$funcroot/selecttbllist.php";
-	}
 
 	// Get job (and id)
 	$job = $id = "";
 	if ( isset($_GET["job"]) ) {
 		$job = $_GET["job"];
-		if ( $job == "get_records" || $job == "get_record" || $job == "add_record" || $job == "edit_record" || $job == "delete_record" || $job == "page_lists" ) {
+		if ( $job == "get_records" || $job == "get_record" || $job == "add_record"
+			|| $job == "edit_record" || $job == "delete_record" || $job == "page_lists"
+			|| $job == "attach_record" ) {
 			if ( isset($_GET["id"]) ) {
 				$id = $_GET["id"];
 				if ( !is_numeric($id) ) {
@@ -34,7 +31,7 @@ if ( !empty($_GET["page"]) ) {
 	$query_data = array();
 
 	// Valid job found
-	if ( $job != "" && $job != "page_lists") {
+	if ( $job != "" ) {
 		// Connect to database
 		$conn = db_connect($servername, $username, $password, $database);
 		if ( $result == "error" ) {
@@ -42,6 +39,40 @@ if ( !empty($_GET["page"]) ) {
 			$message = "Failed to connect to database: ".mysqli_connect_error();
 			$job = "";
 		}
+
+		// does input_type == tableselect?
+		if ( array_search( "tableselect", array_column( $colslist, "input_type" ) ) !== null ) {
+			// create array for creating select dropdown list
+			foreach ( $selslist as $sel ) {
+				if ( !empty($sel["parselcol"]) && !empty($sel["partitle"]) ) {
+					//echo "there: ".$sel["parselcol"]."<br>";
+					$name[0] = [ [ "key" => "selectparent", "title" => "" ] ];
+					$lists[$sel["selcol"]] = $name[0];
+				} else {
+					if ( !empty($sel["whereval"]) ) { $wherestring = ' where '.$sel["wherekey"]." like ".$sel["whereval"]; } // !!! CANNOT USE SINGLE OR DOUBLE QUOTES HERE, PLACE IN VAR
+					elseif ( !empty($sel["wherekey"]) ) { $wherestring = ' where '.$sel["wherekey"]; }
+					//$sqlsel_rows = "select * from ".$sel["seltable"].$wherestring;
+					$sqlsel_rows = "select ".$sel["selid"].", ".$sel["selname"]." from ".$sel["seltable"].$wherestring." ORDER BY ".$sel["selname"];
+					//echo $sqlsel_rows."<br>";
+					$result = db_query($sqlsel_rows);
+					if ( db_num_rows($result) > 0) {
+						// output data of each row
+						$i=0;
+						while ( $row = db_fetch_assoc($result) ) {
+							//$name[$i] = [ [ "key" => $row[$sel["selid"]], "title" => $row[$sel["selname"]] ] ];
+							$name[$i] = [ [ "key" => $row["id"], "title" => $row[$sel["selname"]] ] ];
+							//echo $row[$sel["selid"]].":".$row[$sel["selname"]].";";
+							if ( $i != 0 ) { $name[0] = array_merge($name[0], $name[$i]); }
+							$i++;
+						}
+						$lists[$sel["selcol"]] = $name[0];
+					}
+					unset($wherestring);
+					unset($result);
+				}
+			}
+		}
+
 		// Execute job
 		if ( $job == "get_records" ) {
 			// import viewtables query build here
@@ -131,12 +162,10 @@ if ( !empty($_GET["page"]) ) {
 			} elseif ( !empty($wheres) && !empty($addwheres) )
 				$wheres = "WHERE ".rtrim(trim($wheres),"AND").$addwheres;
 
-			$sqlsel_rows = "SELECT $table.id, $fields FROM $table $ljointables $wheres $groupby $colorderby";
+			$sqlstatement = "SELECT $table.id, $fields FROM $table $ljointables $wheres $groupby $colorderby";
 
 			// Get Records
-			$query = $sqlsel_rows;
-			$sqlstatement = $sqlsel_rows;
-			$query = db_query($query);
+			$query = db_query($sqlstatement);
 			if (!$query) {
 				$result = "error";
 				$message = "query error";
@@ -200,8 +229,8 @@ if ( !empty($_GET["page"]) ) {
 				$result = "error";
 				$message = "id missing";
 			} else {
-				$query = "SELECT * FROM $table WHERE id = '".addslashes($id)."'";
-				$query = db_query($query);
+				$sqlstatement = "SELECT * FROM $table WHERE id = '".addslashes($id)."'";
+				$query = db_query($sqlstatement);
 				if ( !$query ) {
 					$result = "error";
 					$message = "query error";
@@ -225,12 +254,12 @@ if ( !empty($_GET["page"]) ) {
 
 		} elseif ( $job == "add_record" ) {
 			// Add Record
-			$query = "INSERT INTO $table SET ";
+			$sqlstatement = "INSERT INTO $table SET ";
 			foreach ( $colslist as $i => $col ) {
 				if ( isset($_GET[$col["column"]]) && empty($_GET[$col["column"]]) ) {
-					$query .= $col["column"]." = NULL, ";
+					$sqlstatement .= $col["column"]." = NULL, ";
 				} elseif ( isset($_GET[$col["column"]]) ) {
-					$query .= $col["column"]." = '".addslashes($_GET[$col["column"]])."', ";
+					$sqlstatement .= $col["column"]." = '".addslashes($_GET[$col["column"]])."', ";
 				}
 				if ( $col["input_type"] == "crosswalk" ) {
 					$crosswalk = 1;
@@ -244,9 +273,8 @@ if ( !empty($_GET["page"]) ) {
 					}
 				}
 			}
-			$query = rtrim($query, ', ');
-			$sqlstatement = $query; // for debugging
-			$query = db_query($query);
+			$sqlstatement = rtrim($sqlstatement, ', ');
+			$query = db_query($sqlstatement);
 			if ( !$query ) {
 				$result = "error";
 				$message = "query error";
@@ -267,19 +295,19 @@ if ( !empty($_GET["page"]) ) {
 				$result = "error";
 				$message = "id missing";
 			} else {
-				$query = "UPDATE $table SET ";
+				$sqlstatement = "UPDATE $table SET ";
 				foreach ( $colslist as $i => $col ) {
 					if ( isset($_GET[$col["column"]]) && empty($_GET[$col["column"]]) ) {
-						$query .= $col["column"]." = NULL, ";
+						$sqlstatement .= $col["column"]." = NULL, ";
 					} elseif ( isset($_GET[$col["column"]]) ) {
-						$query .= $col["column"]." = '".addslashes($_GET[$col["column"]])."', ";
+						$sqlstatement .= $col["column"]." = '".addslashes($_GET[$col["column"]])."', ";
 					} elseif ( !isset($_GET[$col["column"]]) && $col["input_type"] == "checkbox" ) {
-						$query .= $col["column"]." = '0', ";
+						$sqlstatement .= $col["column"]." = '0', ";
 					}
 				}
-				$query = rtrim($query, ', ');
-				$query .= "WHERE id = '".addslashes($id)."'";
-				$query = db_query($query);
+				$sqlstatement = rtrim($sqlstatement, ', ');
+				$sqlstatement .= "WHERE id = '".addslashes($id)."'";
+				$query = db_query($sqlstatement);
 				if ( !$query ) {
 					$result = "error";
 					$message = "query error";
@@ -295,9 +323,8 @@ if ( !empty($_GET["page"]) ) {
 				$result = "error";
 				$message = "id missing";
 			} else {
-				$query = "DELETE FROM $table WHERE id = '".addslashes($id)."'";
-				$sqlstatement = $query;
-				$query = db_query($query);
+				$sqlstatement = "DELETE FROM $table WHERE id = '".addslashes($id)."'";
+				$query = db_query($sqlstatement);
 				if ( !$query ) {
 					$result = "error";
 					$message = "query error";
@@ -306,14 +333,14 @@ if ( !empty($_GET["page"]) ) {
 					$message = "query success";
 				}
 			}
+
+		} elseif ( $job == "page_lists" ) {
+			$result = "success";
+			$message = "page_lists";
+			$query_data = [ "page" => $_GET["page"], "app" => $_GET["app"] ];
 		}
 		// Close database connection
 		db_close($conn);
-
-	} elseif ( $job == "page_lists" ) {
-		$result = "success";
-		$message = "page_lists";
-		$query_data = [ "page" => $_GET["page"], "app" => $_GET["app"] ];
 	}
 	// Prepare data
 	$data = array(
