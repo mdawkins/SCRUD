@@ -29,7 +29,7 @@ $(document).ready(function() {
 		$("#table_records").html(dt_header( colsls, 'maintable', showrownum , showdeletecolumn ));
 
 		// Set CSS for rowformat
-		if ( rowfmt !== undefined ) {
+		if ( rowfmt != null ) {
 			$("head").append( rowformat( rowfmt, '#fff', '#ddd', '#ffd' ) );
 		}
 
