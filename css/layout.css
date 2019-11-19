@@ -632,7 +632,7 @@ table.datatable thead th.filter_content {
 .lightbox_content .input_container .field_container select[multiple] {
   height: 90px;
 }
-.lightbox_content .input_container .field_container input, select {
+.lightbox_content .input_container .field_container input, select, textarea {
   width: 100%;
   height: 32px;
   background-color: #f9f9f9;
@@ -650,6 +650,9 @@ table.datatable thead th.filter_content {
 .lightbox_content .input_container .field_container input:focus {
   background-color: #ffd;
   color: #000;
+}
+.lightbox_content .input_container .field_container textarea {
+  height: 90px;
 }
 
 .lightbox_content .input_container .field_container.error:after,

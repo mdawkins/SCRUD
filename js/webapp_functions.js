@@ -155,7 +155,7 @@ function addedit_form ( columnslist, lists ) {
 			formhtml += "\t<div class=\"field_container\">\n";
 			// input types
 			if ( col["input_type"] == "textarea" ) {
-			formhtml += "\t\t<textarea class=\"text textarea\" name=\"" + col["column"] + "\" id=\"" + col["column"] + "></textarea>\n";
+			formhtml += "\t\t<textarea class=\"text textarea\" name=\"" + col["column"] + "\" id=\"" + col["column"] + "\"></textarea>\n";
 			} else if ( col["input_type"] == "select" || col["input_type"] == "tableselect" ) {
 				if ( col["multiple"] == "yes" ) { var multiple = " multiple";
 				} else var multiple = "";
