@@ -44,11 +44,11 @@ function json_dtcolumns ( colslist, showrownum, showdeletecolumn ) {
 	}
 	colslist.forEach(function(col) {
 		var sClassstring = '';
-		if ( col["colwidth"] == "yes" ) {
+		if ( col["colview"] == "ellipsis" ) {
 			sClassstring = ', "sClass": "truncate"';
 		} else if ( col["input_type"] == "currency" ) {
 			sClassstring = ', "sClass": "integer"';
-		} else if ( col["hidecol"] == "yes" ) {
+		} else if ( col["colview"] == "hide") {
 			sClassstring =', "visible": false';
 		} else if ( col["input_type"] == "drilldown" ) {
 			sClassstring = ', "sClass": "functions", "orderable": false';
@@ -61,6 +61,8 @@ function json_dtcolumns ( colslist, showrownum, showdeletecolumn ) {
 	});
 	if ( showdeletecolumn != "no" ) {
 		colsjson += "		{ \"data\": \"functions\", \"sClass\": \"functions\" }\n";
+	} else {
+		colsjson = colsjson.replace(/,\n$/, "\n");
 	}
 	colsjson += "  ]\n"; 
 	return JSON.parse(colsjson);
