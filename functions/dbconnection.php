@@ -1,12 +1,8 @@
 <?php
 
-// Connect to mysql DB	
+// Connect to DB	
 // need to be include from a siteinfo config file
 // Create connection
-
-//default mysql, overwrite in config files for oracle
-$service = "mysql";
-
 
 // prefer to write in procedural bc of oracle examples
 function db_connect($servername, $username, $password, $database) {
