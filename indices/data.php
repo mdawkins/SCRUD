@@ -40,7 +40,15 @@ if ( !empty($_GET["page"]) ) {
 			$job = "";
 		}
 
-		// does input_type == tableselect?
+		// BN - Is tableselect, essentially a file of non-db 'table' data?
+		// or just the opposite? Go get data from a table for select drop downs?
+		// MD - tableselect is a html select where its options are generated from
+		// a DB table query. It requieres a valid array pair bewtween selslist & colslist
+		// eg: casetracker>clientcases> "selcol" => "attorneyid" pairs to "column" => "attorneyid"
+		// the following code, converts the selslist array into lists array with populated
+		// "key" and "title" values.
+
+		// Does input_type == tableselect?
 		if ( array_search( "tableselect", array_column( $colslist, "input_type" ) ) !== null ) {
 			// create array for creating select dropdown list
 			foreach ( $selslist as $sel ) {
@@ -73,9 +81,17 @@ if ( !empty($_GET["page"]) ) {
 			}
 		}
 
+		// Does input_type == pivottable?
+		// insert logic from labtests/testroster
+		// Does input_type == dropedit?
+		// insert logic from labtests/spec700 & specs703actual
+		// Does input_type == tableselect && is nested?
+		// insert logic from labtests/transmittal
+		// Attach child record to parent record in crosswalk table
+
 		// Execute job
 		if ( $job == "get_records" ) {
-			// import viewtables query build here
+			// TODO: implemented in pajmcrud with example in labtests
 			//Pivot Table join variables
 			foreach ( $lists["pivcols"] as $key ) {
 				$pivkey = $key["pivkey"];
@@ -85,53 +101,101 @@ if ( !empty($_GET["page"]) ) {
 				$joinwherekey = $key["wherekey"];
 				$joinwhereval = $key["whereval"];
 			}
+
 			// table row header
+			// BUILD SQL STATMENT BASED ON CONFIG FILE ARRAYS FOR PAGE
+			// BN - Sniff db, then branch to MySQLLib php file, with this code
+			// or point it at OCI8 oraLib php file
+			// MD - The .serv.conf addresses which service (ie mysql/oracle) to use.
+			// Once the service variable is established, functions/dbconnection.php
+			// implements the appropriate DB function calls inside SCRUD's DB functions
+			// Eg. db_connect: implements either mysqli_connect or oci_connect depending on service
 			foreach ( $colslist as $i => $col ) {
-				if ( ( $col["input_type"] == "tableselect" || ( $col["input_type"] == "crosswalk" && $_GET["dt_table"] != "maintable" ) ) && array_search($col["column"], array_column($selslist, "selcol")) !== null ) {
+				// IF col input type is a tableselect OR input type is a crosswalk and the main datatables table variable is not maintable
+				if (
+					(
+						$col["input_type"] == "tableselect"
+						|| (
+							$col["input_type"] == "crosswalk"
+							&& $_GET["dt_table"] != "maintable"
+						)
+					)
+					// AND selslist "selcol" == colslist "column"
+					// This basic array mapping
+					&& array_search($col["column"], array_column($selslist, "selcol")) !== null ) {
 					foreach ( $selslist as $k => $sel ) {
 						if ( $col["column"] == $sel["selcol"] ) {
 							$searchcol = $sel["selname"];
 							$ljointables .= "LEFT JOIN ".$sel["seltable"]." AS t$i ON ";
+							// IF col input type is select/tableselect with multiple options to be selected
 							if ( $col["multiple"] == "yes" ) {
 								// replace %T% with table alias
 								$fields .= str_replace("%T%", "t$i", "GROUP_CONCAT(".$sel["selname"]." ORDER BY 1 SEPARATOR ', ') AS ".$col["column"]).",";
 								$ljointables .= $table.".".$col["column"]." LIKE CONCAT('%', t$i.".$sel["selid"].", '%') ";
 								$groupby = "GROUP BY $table.".$col["column"];
+							// IF tableselect value needs to concatenate multiple columns into one field
+							// Eg Labtests: testqualification:
+							// [ "column" => "testid", "title" => "Test: AASHTO / ASTM", "required" => "yes", "input_type" => "tableselect", "concatfield" => "yes" ],
+							// [ "selcol" => "testid", "selname" => "concat(IF(aashtodesignation = '', '---', aashtodesignation), ' / ', IF(astmdesignation = '', '---', astmdesignation), ' ', testmethod)", "selid" => "id", "seltable" => "accreditedtests", "wherekey" => "", "whereval" => "" ],
 							} elseif ( $col["concatfield"] == "yes" ) {
 								$fields .= str_replace("%T%", "t$i", $sel["selname"]." AS ".$col["column"]).",";
 								$ljointables .= $table.".".$col["column"]." = t$i.".$sel["selid"]." ";
+							// IF col input type is crosswalk and we are attaching a child drilldown table to the parent record
+							// Eg Casetracker: caseinfo: via embedded/child config file
+							// [ "column" => "crosswalkclientscases", "title" => "Crosswalk", "input_type" => "crosswalk" ],
+							// [ "selcol" => "crosswalkclientscases", "selname" => "", "selid" => "caseid", "seltable" => "crosswalkclientscases", "wherekey" => "clientid", "whereval" => "" ],
 							} elseif ( $col["input_type"] == "crosswalk" ) {
 								$ljointables .= $table.".id = t$i.".$sel["selid"]." ";
 								$wheres .= "t$i.".$sel["wherekey"]." = $id AND"; 
+							// Default logic if col input type is tableselect
 							} else {
 								$fields .= "t$i.".$sel["selname"]." AS ".$col["column"].",";
 								$ljointables .= $table.".".$col["column"]." = t$i.".$sel["selid"]." ";
 							}
 						}
 					} 
+				// IF col input type is pivotjoin
+				// Eg labtests: testroster:
+				// See page config file for TODO integration of logic into data.php
 				} elseif ( $col["input_type"] == "pivotjoin" ) {
 					$fields .= "`".$col["column"]."`, ";
 					$ljointables .= "LEFT JOIN\n\t(SELECT $pivkey, GROUP_CONCAT(DISTINCT(CASE WHEN $joinkey = '".$col["key"]."' THEN $keyname END) ORDER BY 1 SEPARATOR ', ') AS '".$col["column"]."' FROM $jointable WHERE $joinwherekey = $joinwhereval AND $joinkey = '".$col["key"]."' GROUP BY $pivkey) AS t".$i." ON $table.id=t$i.$pivkey\n";
+				// Eg casetracker: clientinfo
+				//  Show in viewtable but not in the addedit form
 				} elseif ( $col["input_type"] == "noform" ) {
 					$fields .= $col["colfunc"]." AS ".str_replace("%T%", "t$i", $col["column"]).",";
+				// Eg labtest: testroster no addedit form
+				//  [ "column" => "testname", "concatval" => "concat(IF(aashtodesignation = '', '---', aashtodesignation), ' / ', IF(astmdesignation = '', '---', astmdesignation), ' ', testmethod)", "title" => "Test: AASHTO / ASTM", "input_type" => "text", "filterbox" => "text" ],
 				} elseif ( !empty($col["concatval"]) ) {
 					$fields .= $col["concatval"]." AS ".str_replace("%T%", "t$i", $col["column"]).",";
+				// Eg fundsmap: historicalprojects
+				//  Format number to currency or if zero leave --
 				} elseif ( $col["input_type"] == "currency" ) {
 					$tablecolname = "$table.".$col["column"];
 					$fields .= "IF($tablecolname IS NULL OR $tablecolname = '0', '--', concat('$',format($tablecolname, 2))) AS ".$col["column"].",";
+				// Eg labtests: testqualification
+				//  Format YYYY/MM/DD to MM/DD/YYYY or leave --
 				} elseif ( $col["input_type"] == "date" ) {
 					$tablecolname = "$table.".$col["column"];
 					$fields .= "IF($tablecolname IS NULL OR $tablecolname = '0000-00-00', '--', date_format($tablecolname, '%m/%d/%Y')) AS ".$col["column"].",";
+				// Eg casetracker: clientcases
+				//  Format YYYY/MM/DD 24H to MM/DD/YYYY 12a/p or leave --
 				} elseif ( $col["input_type"] == "datetime" ) {
 					$tablecolname = "$table.".$col["column"];
 					$fields .= "IF($tablecolname IS NULL OR $tablecolname = '0000-00-00 00:00:00', '--', date_format($tablecolname, '%m/%d/%Y %r')) AS ".$col["column"].",";
+				// Eg casetracker: clientinfo
+				// Produce a Arrow button and display childrecords in a subtable
 				} elseif ( $col["input_type"] == "drilldown" || $col["input_type"] == "crosswalk" ) {
 					continue;
 				} else {
 					$fields .= "$table.".$col["column"].", ";
 				}
 				// add in ajax filters wheres here
+				// this was implemented in pajm and could be reused here if we do serverside filtering
+				// where the SQl statement is updated using ajax
 				if ( !empty($_POST[$col["column"]]) ) {
+					// BN - ex: In " t$i.id REGEXP ", what is "t" for ?
+					// MD - {t}ableN.id
 					${$col["column"]} = implode("','", $_POST[$col["column"]]);
 					if ( $col["filterbox"] == "checkbox" ) { 
 						if ( $col["multiple"] == "yes" && $col["input_type"] == "tableselect")
@@ -163,8 +227,11 @@ if ( !empty($_GET["page"]) ) {
 				$wheres = "WHERE ".rtrim(trim($wheres),"AND").$addwheres;
 
 			$sqlstatement = "SELECT $table.id, $fields FROM $table $ljointables $wheres $groupby $colorderby";
-
+			//
+			// END BUILD SQL STATMENT BASED ON CONFIG FILE ARRAYS FOR PAGE
+			//
 			// Get Records
+			// Evaluate result of query
 			$query = db_query($sqlstatement);
 			if (!$query) {
 				$result = "error";
@@ -183,6 +250,7 @@ if ( !empty($_GET["page"]) ) {
 					$k=0;
 					foreach ( $colslist as $i => $col ) {
 						// modify data
+						// handle lists data eg iinput type select or tableselect
 						if ( $col["input_type"] == "select" || $col["input_type"] == "tableselect" ) {
 							foreach ( $lists[$col["column"]] as $lst ) {
 								$row[$col["column"]] = str_replace($lst["key"], $lst["title"], $row[$col["column"]]);
@@ -190,18 +258,22 @@ if ( !empty($_GET["page"]) ) {
 							if ( $col["multiple"] == "yes" ) {
 								$row[$col["column"]] = str_replace(";", "/", $row[$col["column"]]);
 							}
+						// handle input type checkbox
 						} elseif ( $col["input_type"] == "checkbox" ) {
 							if ( $row[$col["column"]] == 1 ) {
 								$row[$col["column"]] = "<i class=\"fa fa-fw fa-check-square\">";
 							} else {
 								$row[$col["column"]] = "<i class=\"fa fa-fw fa-square\">";
 							}
+						// handle input drilldown
 						} elseif ( $col["input_type"] == "drilldown" ) {
 							$row[$col["column"]] = '<div class="function_buttons"><ul>';
 							$row[$col["column"]] .= '<li class="function_drilldown"><a data-id="'.$row["id"].'" data-name="'.$col["column"].'"><span>Show</span></a></li>';
 							$row[$col["column"]] .= '</ul></div>';
+						// Ignore crosswalk input type; this is only used in child records/nested tables
 						} elseif ( $col["input_type"] == "crosswalk" ) {
 							continue;
+						// Unfinished - I'd like to find a way to have Datatables produce onhoover field data
 						} else { // this is legacy td title from pajm, not going to work here
 							if ( isset($col["colwidth"]) && $col["colwidth"] < strlen($colstring) ) {
 								$titlestring = "title=\"$colstring\"";
@@ -222,6 +294,7 @@ if ( !empty($_GET["page"]) ) {
 					$j++;
 				}
 			}
+		// END job: get records
 
 		} elseif ( $job == "get_record" ) {
 			// Get Record
@@ -253,7 +326,7 @@ if ( !empty($_GET["page"]) ) {
 			}
 
 		} elseif ( $job == "add_record" ) {
-			// Add Record
+			// Add Record: Needs to be verified to work with Oracle
 			$sqlstatement = "INSERT INTO $table SET ";
 			foreach ( $colslist as $i => $col ) {
 				if ( isset($_GET[$col["column"]]) && empty($_GET[$col["column"]]) ) {
@@ -288,7 +361,7 @@ if ( !empty($_GET["page"]) ) {
 					$query = db_query($sqlstatement);
 				}
 			}
-
+		// END job: add_record
 		} elseif ( $job == "edit_record" ) {
 			// Edit Record
 			if ( $id == "" ) {
@@ -316,9 +389,9 @@ if ( !empty($_GET["page"]) ) {
 					$message = "query success";
 				}
 			}
-
+		// END job: edit_record
 		} elseif ( $job == "delete_record" ) {
-			// Delete Record
+			// Delete Record: Needs to be verified to work with Oracle
 			if ( $id == "" ) {
 				$result = "error";
 				$message = "id missing";
@@ -333,31 +406,33 @@ if ( !empty($_GET["page"]) ) {
 					$message = "query success";
 				}
 			}
-
+		// End Job: delete_record
 		} elseif ( $job == "page_lists" ) {
 			$result = "success";
 			$message = "page_lists";
 			$query_data = [ "page" => $_GET["page"], "app" => $_GET["app"] ];
 		}
+		// End Job: page_lists
 		// Close database connection
 		db_close($conn);
 	}
-	// Prepare data
+	// Prepare dat from info in config file arrays
 	$data = array(
-		"pginfo"  => $pageinfo,
-		"colsls"  => $colslist,
-		"lists"   => $lists,
-		"selslist"  => $selslist,
-		"rowfmt"  => $rowformat,
-		"sql"     => $sqlstatement,
-		"result"  => $result,
-		"message" => $message,
-		"data"    => $query_data,
-		"lastid"  => $lastid,
+		"pginfo"  => $pageinfo, // page directives. Ex: Title, table, pagination, etc
+		"colsls"  => $colslist, // columns and col settings
+		"lists"   => $lists, // support non-db data lists
+		"selslist"  => $selslist, // list of lookup table related info for dropdowns and joins
+		"rowfmt"  => $rowformat, // allows for visual formatting of rows based on row data
+		"sql"     => $sqlstatement, // generated sql statement for page
+		"result"  => $result, // if $query true = success, else $query false = error
+		"message" => $message, // message from qry execuction (select, insert, update, delete)
+		"data"    => $query_data, // data returned from "get_records" and "get_record"
+		"lastid"  => $lastid, // pk_id of inserted
 	);
 
 	// Convert PHP array to JSON array
 	$json_data = json_encode($data);
+	//output the JSON array data for use by ajax call
 	print $json_data;
 
 }
