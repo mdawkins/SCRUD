@@ -432,3 +432,50 @@ function rowformat ( rowfmt, bgcolorodd, bgcoloreven, bgcolorhover ) {
 	cssstyle += "</style>\n";
 	return cssstyle;
 }
+function ajaxselect ( attributeid, page, lists, selslist ) {
+	$(document).on('change', 'select', attributeid, function() {
+		var parentvalue = $(this).val();
+		var parentcol = $(this).attr('id');
+		Object.keys(lists).forEach(function(list) {
+			var i = arrayColumn(selslist, "selcol").indexOf(list);
+			if ( i > 0 && parentcol == selslist[i]["parselcol"]) { // not sure why first value returned is -1
+				var nestedcolumn = list;
+				var nestedname = selslist[i]["selname"];
+				var nestedid = selslist[i]["selid"];
+				var nestedtable = selslist[i]["seltable"];
+				var nestedunion = selslist[i]["selunion"];
+				var wherekey = selslist[i]["wherekey"];
+				var wherevalue = selslist[i]["whereval"];
+				var parentcolumn = selslist[i]["parselcol"]; //parentcol
+				var parenttitle = selslist[i]["partitle"];
+				var datastring = '&nestedcolumn=' + encodeURI(nestedcolumn);
+				datastring += '&nestedname=' + encodeURI(nestedname);
+				datastring += '&nestedid=' + encodeURI(nestedid);
+				datastring += '&nestedtable=' + encodeURI(nestedtable);
+				datastring += '&wherekey=' + encodeURI(wherekey);
+				datastring += '&wherevalue=' + encodeURI(wherevalue);
+				if ( nestedunion !== undefined ) {
+					datastring += '&nestedunion=' + encodeURI(nestedunion);
+				}
+				datastring += '&parentcolumn=' + encodeURI(parentcolumn);
+				datastring += '&parenttitle=' + encodeURI(parenttitle);
+				datastring += '&parentid=' + encodeURI(parentvalue);
+				//console.log( 'nc: ' + nestedcolumn + '; nn: ' + nestedname + '; nid: ' + nestedid + '; nt: ' + nestedtable + '; nu: ' + nestedunion );
+				//console.log( 'wk: ' + wherekey + '; wv: ' + wherevalue + '; pc: ' + parentcolumn + '; pt: ' + parenttitle );
+				//console.log( datastring );
+				if ( parentvalue ) {
+					$.ajax({
+						url:	'data.php?page=' + page + '&job=ajax_select',
+						data:	datastring,
+						type:	'get',
+						success: function(html) {
+							$('#' + nestedcolumn).html(html);
+						}
+					});
+				} else {
+					$('#' + nestedcolumn).html('<option value=\"\">Select ' + parenttitle + ' first</option>');
+				}
+			}
+		});
+	});
+}
