@@ -16,7 +16,7 @@ if ( !empty($_GET["page"]) ) {
 		$job = $_GET["job"];
 		if ( $job == "get_records" || $job == "get_record" || $job == "add_record"
 			|| $job == "edit_record" || $job == "delete_record" || $job == "page_lists"
-			|| $job == "attach_record" ) {
+			|| $job == "attach_record" || $job == "ajax_select" ) {
 			if ( isset($_GET["id"]) ) {
 				$id = $_GET["id"];
 				if ( !is_numeric($id) ) {
@@ -52,9 +52,10 @@ if ( !empty($_GET["page"]) ) {
 		if ( array_search( "tableselect", array_column( $colslist, "input_type" ) ) !== null ) {
 			// create array for creating select dropdown list
 			foreach ( $selslist as $sel ) {
+				// This identifies that the select is cascading/nested to a parent select
 				if ( !empty($sel["parselcol"]) && !empty($sel["partitle"]) ) {
 					//echo "there: ".$sel["parselcol"]."<br>";
-					$name[0] = [ [ "key" => "selectparent", "title" => "" ] ];
+					$name[0] = [ [ "key" => "selectparent", "value" => $sel["parselcol"], "title" => "Select ".$sel["partitle"]." first" ] ];
 					$lists[$sel["selcol"]] = $name[0];
 				} else {
 					if ( !empty($sel["whereval"]) ) { $wherestring = ' where '.$sel["wherekey"]." like ".$sel["whereval"]; } // !!! CANNOT USE SINGLE OR DOUBLE QUOTES HERE, PLACE IN VAR
@@ -411,11 +412,51 @@ if ( !empty($_GET["page"]) ) {
 			$result = "success";
 			$message = "page_lists";
 			$query_data = [ "page" => $_GET["page"], "app" => $_GET["app"] ];
-		}
 		// End Job: page_lists
+		} elseif ( $job == "ajax_select" ) {
+			$nestedcolumn=urldecode($_GET["nestedcolumn"]);	//nestedcolumn={{SELCOL}}
+			$nestedname=urldecode($_GET["nestedname"]);		//nestedname={{SELNAME}}
+			$nestedid=urldecode($_GET["nestedid"]);			//nestedid={{SELID}}
+			$nestedtable=urldecode($_GET["nestedtable"]);	//nestedtable={{SELTABLE}}
+			$wherekey=urldecode($_GET["wherekey"]);			//wherekey={{WHEREKEY}}
+			$wherevalue=urldecode($_GET["wherevalue"]);		//whervalue={{WHEREVAL}}
+			$nestedunion=urldecode($_GET["nestedunion"]);	//wherval={{WHEREVAL}}
+			$parentcolumn=urldecode($_GET["parentcolumn"]);	//parentcolumn={{PARSELCOL}}
+			$parenttitle=urldecode($_GET["parenttitle"]);	//parenttitle={{PARTITLE}}
+			$parentid=urldecode($_GET["parentid"]);			//grabbed by jquery event this val
+
+			if ( !empty($nestedunion) ) {
+				$unionstring = " UNION ( SELECT ".$nestedid.", ".$nestedname." as ".$nestedcolumn." FROM ".$nestedunion."=".$parentid." )";
+			}
+			if ( !empty($wherevalue) ) {
+				$wherestring = ' WHERE '.$wherekey." LIKE ".$wherevalue; // !!! CANNOT USE SINGLE OR DOUBLE QUOTES HERE, PLACE IN VAR
+			} elseif ( !empty($wherekey) ) {
+				$wherestring = ' WHERE '.$wherekey;
+			}
+			//Fetch all state data
+			$sqlstatement = "SELECT t1.".$nestedid.", ".$nestedname." as ".$nestedcolumn." FROM ".$nestedtable.$wherestring." and t2.id = ".$parentid.$unionstring." ORDER BY ".$nestedid." ASC";
+			$query = db_query($sqlstatement);
+			//Count total number of rows
+			$rowCount = db_num_rows($query);
+
+			//Project option list
+			if ( $rowCount > 1 ) { //only print if there are multiple rows
+				echo '<option value="">Select a '.$parenttitle.'</option>';
+			} 
+			if ( $rowCount > 0 ) { 
+				while ( $row = db_fetch_assoc($query) ) {
+					echo '<option value="'.$row[$nestedid].'">'.$row[$nestedcolumn].'</option>';
+				}
+			} else {
+				echo '<option value="">'.$sqlstatement.' not available</option>'; // throw sql to option for debugging
+			}
+		}
+		// End Job: ajax_select
 		// Close database connection
 		db_close($conn);
 	}
+}
+if ( $job != "ajax_select" ) {	
 	// Prepare dat from info in config file arrays
 	$data = array(
 		"pginfo"  => $pageinfo, // page directives. Ex: Title, table, pagination, etc

@@ -7,7 +7,7 @@ $(document).ready(function() {
 	let app = searchParams.get('app');
 
 	// set variables needed for maintable
-	var pginfo, colsls, lists, rowfmt, sql;
+	var pginfo, colsls, lists, selslist, rowfmt, sql;
 	var pagetitle, table, showidcolumn, showrownum, showdeletecolumn, colorderby, rowlimit;
 	var jsondtcolumns, jsonfiltercolumns, rwfmt;
 
@@ -21,6 +21,7 @@ $(document).ready(function() {
 			}
 			colsls = output.colsls;
 			lists = output.lists;
+			selslist = output.selslist;
 			rowfmt = output.rowfmt;
 		}
 		// Set page title
@@ -123,6 +124,52 @@ $(document).ready(function() {
 		$('#reset').click(function(e) {
 			e.preventDefault();
 			maintable.colReorder.reset();
+		});
+		// Capture Parent Select change
+		$(document).on('change', 'select', '#form_record', function() {
+			var parentvalue = $(this).val();
+			var parentcol = $(this).attr('id');
+			Object.keys(lists).forEach(function(list) {
+				var i = arrayColumn(selslist, "selcol").indexOf(list);
+				if ( i > 0 && parentcol == selslist[i]["parselcol"]) { // not sure why first value returned is -1
+					var nestedcolumn = list;
+					var nestedname = selslist[i]["selname"];
+					var nestedid = selslist[i]["selid"];
+					var nestedtable = selslist[i]["seltable"];
+					var nestedunion = selslist[i]["selunion"];
+					var wherekey = selslist[i]["wherekey"];
+					var wherevalue = selslist[i]["whereval"];
+					var parentcolumn = selslist[i]["parselcol"]; //parentcol
+					var parenttitle = selslist[i]["partitle"];
+					var datastring = '&nestedcolumn=' + encodeURI(nestedcolumn);
+					datastring += '&nestedname=' + encodeURI(nestedname);
+					datastring += '&nestedid=' + encodeURI(nestedid);
+					datastring += '&nestedtable=' + encodeURI(nestedtable);
+					datastring += '&wherekey=' + encodeURI(wherekey);
+					datastring += '&wherevalue=' + encodeURI(wherevalue);
+					if ( nestedunion !== undefined ) {
+						datastring += '&nestedunion=' + encodeURI(nestedunion);
+					}
+					datastring += '&parentcolumn=' + encodeURI(parentcolumn);
+					datastring += '&parenttitle=' + encodeURI(parenttitle);
+					datastring += '&parentid=' + encodeURI(parentvalue);
+					//console.log( 'nc: ' + nestedcolumn + '; nn: ' + nestedname + '; nid: ' + nestedid + '; nt: ' + nestedtable + '; nu: ' + nestedunion );
+					//console.log( 'wk: ' + wherekey + '; wv: ' + wherevalue + '; pc: ' + parentcolumn + '; pt: ' + parenttitle );
+					//console.log( datastring );
+					if ( parentvalue ) {
+						$.ajax({
+							url:	'data.php?page=' + page + '&job=ajax_select',
+							data:	datastring,
+							type:	'get',
+							success: function(html) {
+								$('#' + nestedcolumn).html(html);
+							}
+						});
+					} else {
+						$('#' + nestedcolumn).html('<option value=\"\">Select ' + parenttitle + ' first</option>');
+					}
+				}
+			});
 		});
 
 		// Add Record button & submit form

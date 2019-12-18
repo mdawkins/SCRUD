@@ -125,7 +125,7 @@ function dt_header ( columnslist, tableid, showrownum, showdeletecolumn, id, pag
 		}
 		headerhtml += "\t\t\t\t<li id=\"add_record\" class=\"function_add\"><a " + dataid + " " + dataname + "><span title=\"Add Record\">Add</span></a></li>\n";
 		if ( tableid != "maintable" ) {
-			headerhtml += "\t\t\t\t<li id=\"attach_record\" class=\"function_attach\"><a><span title=\"Attach Record\">Attach</span></a></li>\n\n";
+			headerhtml += "\t\t\t\t<li id=\"attach_record\" class=\"function_attach\"><a " + dataid + " " + dataname + "><span title=\"Attach Record\">Attach</span></a></li>\n\n";
 		}
 		headerhtml += "\t\t\t</ul></div>\n\t\t</th>\n";
 	}
@@ -140,7 +140,7 @@ function dt_header ( columnslist, tableid, showrownum, showdeletecolumn, id, pag
 function format_header_id ( varheader, table_id ) {
 	return varheader.replace("##ID##", table_id);
 }
-function addedit_form ( columnslist, lists ) {
+function addedit_form ( columnslist, lists, selslist ) {
 	var formhtml = "<h2>##blank##</h2>\n";
 	formhtml += "<form class=\"form add\" id=\"form_record\" data-id=\"\" novalidate>\n";
 	columnslist.forEach(function(col) {
@@ -159,17 +159,22 @@ function addedit_form ( columnslist, lists ) {
 			if ( col["input_type"] == "textarea" ) {
 			formhtml += "\t\t<textarea class=\"text textarea\" name=\"" + col["column"] + "\" id=\"" + col["column"] + "\"></textarea>\n";
 			} else if ( col["input_type"] == "select" || col["input_type"] == "tableselect" ) {
-				if ( col["multiple"] == "yes" ) { var multiple = " multiple";
+				if ( col["multiple"] == "yes" ) {
+					var multiple = " multiple";
 				} else var multiple = "";
 				Object.keys(lists).forEach(function(list) {
 					if ( list == col["column"] ) {
 						formhtml += "\t\t<select class=\"text\" name=\"" + col["column"] + "\" id=\"" + col["column"] + "\"" + multiple + ">\n";
 						formhtml += "\t\t\t<option value=\"\">Select a " + col["title"] + "</option>\n";
+						//console.log( lists[list][0]["key"] );
 						for ( var i = 0; i < lists[list].length; i++ ) {
-							var selected = "";
-							if ( list["key"] != "selectparent" ) {
-								formhtml += "\t\t\t<option value=\"" + lists[list][i].key + "\" " + selected + ">" + lists[list][i].title + "</option>\n";
-							} else var selectnested = true; // this is used for cascading selects. needs to be set to false somewhere...
+							if ( lists[list][0]["key"] != "selectparent" ) {
+								formhtml += "\t\t\t<option value=\"" + lists[list][i].key + "\" >" + lists[list][i].title + "</option>\n";
+							} else {
+								var i = arrayColumn(selslist, "selcol").indexOf(list);
+								var parenttitle = selslist[i]["partitle"];
+								formhtml += "\t\t\t<option value=\"\">Select " + parenttitle + " first</option>\n";
+							}
 						}
 						formhtml += "\t\t</select>\n";
 	  				}
@@ -243,6 +248,13 @@ function addeditdel_record ( action ) {
 				configpage = $(this).data('name');
 				dt_table = $(this).closest('table').attr('id');
 			}
+		} else if ( action == 'attach' ) {
+			// this is should always be a drilldown/childrecord/crosswalk etc function
+			show_loading_message();
+			var job = 'page_lists'; // don't know yet
+			id = $(this).data('id'); // clientid
+			configpage = $(this).data('name');
+			dt_table = $(this).closest('table').attr('id');
 		} else if ( action == 'edit' ) {
 			show_loading_message();
 			var job = 'get_record';
@@ -276,7 +288,7 @@ function addeditdel_record ( action ) {
 				if ( action != 'delete' ) {
 	  				colsls = output.colsls;
 	  				data = output.data;
-	  				$(".lightbox_content").html(addedit_form ( output.colsls, output.lists ));
+					$(".lightbox_content").html(addedit_form ( colsls, output.lists, output.selslist ));
 
 					if ( action == 'add' ) {
 						id, data = '';
@@ -370,12 +382,12 @@ function addeditdel_record ( action ) {
 }
 function getdata_ajax ( job, data ) {
 	return $.ajax({
-		url:					'data.php?job=' + job,
-		cache:				false,
-		data:				 data,
-		dataType:		 'json',
+		url:		'data.php?job=' + job,
+		cache:		false,
+		data:		data,
+		dataType:	'json',
 		contentType:  'application/json; charset=utf-8',
-		type:				 'get'
+		type:		'get'
 	});
 }
 function splitHexColor ( hexColor ) {
