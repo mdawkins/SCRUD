@@ -82,18 +82,21 @@ if ( !empty($_GET["page"]) ) {
 			}
 		}
 
-		// Does input_type == pivottable?
-		// insert logic from labtests/testroster
-		// Does input_type == dropedit?
-		// insert logic from labtests/spec700 & specs703actual
-		// Does input_type == tableselect && is nested?
-		// insert logic from labtests/transmittal
-		// Attach child record to parent record in crosswalk table
+		//Pivot Table join variables
+		if ( $tabletype == "pivottable" ) {
+			// Add Column names and keys to colslist
+			$sqlsel_pivcols = "SELECT $pivcolskey, $pivcolsname FROM $pivcolstable";
+			if ( $pivcolswherekey != "" && $pivcolswhereval != "" ) {
+				$sqlsel_pivcols .= " WHERE $pivcolswherekey = '$pivcolswhereval'";
+			}
+			$sqlsel_pivcols .= " ORDER BY $pivcolsname";
+			$result = db_query($sqlsel_pivcols);
+			if ( db_num_rows($result) > 0) {
+				while ( $row = db_fetch_assoc($result) ) {
+					$colslist[] = array( "column" => $row[$pivcolsname], "title" => $row[$pivcolsname], "key" => $row[$pivcolskey], "input_type" => "pivotjoin" );
+				}
+			}
 
-		// Execute job
-		if ( $job == "get_records" ) {
-			// TODO: implemented in pajmcrud with example in labtests
-			//Pivot Table join variables
 			foreach ( $lists["pivcols"] as $key ) {
 				$pivkey = $key["pivkey"];
 				$joinkey = $key["joinkey"];
@@ -102,6 +105,16 @@ if ( !empty($_GET["page"]) ) {
 				$joinwherekey = $key["wherekey"];
 				$joinwhereval = $key["whereval"];
 			}
+		}
+
+		// Does input_type == dropedit?
+		// insert logic from labtests/spec700 & specs703actual
+		// Does input_type == tableselect && is nested?
+		// insert logic from labtests/transmittal
+		// Attach child record to parent record in crosswalk table
+
+		// Execute job
+		if ( $job == "get_records" ) {
 
 			// table row header
 			// BUILD SQL STATMENT BASED ON CONFIG FILE ARRAYS FOR PAGE
@@ -113,14 +126,7 @@ if ( !empty($_GET["page"]) ) {
 			// Eg. db_connect: implements either mysqli_connect or oci_connect depending on service
 			foreach ( $colslist as $i => $col ) {
 				// IF col input type is a tableselect OR input type is a crosswalk and the main datatables table variable is not maintable
-				if (
-					(
-						$col["input_type"] == "tableselect"
-						|| (
-							$col["input_type"] == "crosswalk"
-							&& $_GET["dt_table"] != "maintable"
-						)
-					)
+				if ( ( $col["input_type"] == "tableselect" || ( $col["input_type"] == "crosswalk" && $_GET["dt_table"] != "maintable") )
 					// AND selslist "selcol" == colslist "column"
 					// This basic array mapping
 					&& array_search($col["column"], array_column($selslist, "selcol")) !== null ) {
@@ -160,7 +166,7 @@ if ( !empty($_GET["page"]) ) {
 				// See page config file for TODO integration of logic into data.php
 				} elseif ( $col["input_type"] == "pivotjoin" ) {
 					$fields .= "`".$col["column"]."`, ";
-					$ljointables .= "LEFT JOIN\n\t(SELECT $pivkey, GROUP_CONCAT(DISTINCT(CASE WHEN $joinkey = '".$col["key"]."' THEN $keyname END) ORDER BY 1 SEPARATOR ', ') AS '".$col["column"]."' FROM $jointable WHERE $joinwherekey = $joinwhereval AND $joinkey = '".$col["key"]."' GROUP BY $pivkey) AS t".$i." ON $table.id=t$i.$pivkey\n";
+					$ljointables .= " LEFT JOIN (SELECT $pivkey, GROUP_CONCAT(DISTINCT(CASE WHEN $joinkey = '".$col["key"]."' THEN $keyname END) ORDER BY 1 SEPARATOR ', ') AS '".$col["column"]."' FROM $jointable WHERE $joinwherekey = $joinwhereval AND $joinkey = '".$col["key"]."' GROUP BY $pivkey) AS t".$i." ON $table.id=t$i.$pivkey";
 				// Eg casetracker: clientinfo
 				//  Show in viewtable but not in the addedit form
 				} elseif ( $col["input_type"] == "noform" ) {
