@@ -4,14 +4,13 @@ $(document).ready(function() {
 	// get all the url GET parameters and values
 	let searchParams = new URLSearchParams(window.location.search);
 	let page = searchParams.get('page');
-	let app = searchParams.get('app');
 
 	// set variables needed for maintable
 	var pginfo, colsls, lists, selslist, rowfmt, sql;
 	var pagetitle, table, showidcolumn, showrownum, showdeletecolumn, colorderby, rowlimit;
 	var jsondtcolumns, jsonfiltercolumns, rwfmt;
 
-	var request = getdata_ajax( 'page_lists', {'page': page ,'app': app} );
+	var request = getdata_ajax( 'page_lists', {'page': page} );
 	request.done(function(output) {
 		if (output.result == 'success' && output.message == 'page_lists') {
 			// assign individual variables to their values
@@ -47,7 +46,7 @@ $(document).ready(function() {
 			"ajax": {
 				"url": 'data.php?job=get_records',
 				"cache": false,
-				"data": {'app': app, 'page': page, 'dt_table': 'maintable'},
+				"data": {'page': page, 'dt_table': 'maintable'},
 				"dataType": 'json',
 				"contentType": 'application/json; charset=utf-8',
 				"type": 'get'
@@ -156,7 +155,7 @@ $(document).ready(function() {
 					var jsondtcolumns, jsonfiltercolumns, rwfmt;
 
 					let subpage = col["column"];
-					var request = getdata_ajax( 'page_lists', {'page': subpage ,'app': app} );
+					var request = getdata_ajax( 'page_lists', {'page': subpage} );
 					request.done(function(output) {
 						if (output.result == 'success' && output.message == 'page_lists') {
 							// assign individual variables to their values
@@ -199,7 +198,7 @@ $(document).ready(function() {
 								"ajax": {
 									"url": 'data.php?job=get_records',
 									"cache": true,
-									"data": {'id': id , 'app': app, 'page': subpage, 'dt_table': subpage},
+									"data": {'id': id ,'page': subpage, 'dt_table': subpage},
 									"dataType": 'json',
 									"contentType": 'application/json; charset=utf-8',
 									"type": 'get'
