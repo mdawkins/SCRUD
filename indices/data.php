@@ -14,9 +14,7 @@ if ( !empty($_GET["page"]) ) {
 	$job = $id = "";
 	if ( isset($_GET["job"]) ) {
 		$job = $_GET["job"];
-		if ( $job == "get_records" || $job == "get_record" || $job == "add_record"
-			|| $job == "edit_record" || $job == "delete_record" || $job == "page_lists"
-			|| $job == "attach_record" || $job == "ajax_select" ) {
+		if ( $job == "get_records" || $job == "get_record" || $job == "add_record" || $job == "edit_record" || $job == "delete_record" || $job == "page_lists" || $job == "attach_record" || $job == "ajax_select" ) {
 			if ( isset($_GET["id"]) ) {
 				$id = $_GET["id"];
 				if ( !is_numeric($id) ) {
@@ -53,23 +51,30 @@ if ( !empty($_GET["page"]) ) {
 			// create array for creating select dropdown list
 			foreach ( $selslist as $sel ) {
 				// This identifies that the select is cascading/nested to a parent select
-				if ( !empty($sel["parselcol"]) && !empty($sel["partitle"]) ) {
-					//echo "there: ".$sel["parselcol"]."<br>";
-					$name[0] = [ [ "key" => "selectparent", "value" => $sel["parselcol"], "title" => "Select ".$sel["partitle"]." first" ] ];
-					$lists[$sel["selcol"]] = $name[0];
-				} else {
-					if ( !empty($sel["whereval"]) ) { $wherestring = ' where '.$sel["wherekey"]." like ".$sel["whereval"]; } // !!! CANNOT USE SINGLE OR DOUBLE QUOTES HERE, PLACE IN VAR
-					elseif ( !empty($sel["wherekey"]) ) { $wherestring = ' where '.$sel["wherekey"]; }
-					//$sqlsel_rows = "select * from ".$sel["seltable"].$wherestring;
-					$sqlsel_rows = "select ".$sel["selid"].", ".$sel["selname"]." from ".$sel["seltable"].$wherestring." ORDER BY ".$sel["selname"];
+				if ( $job != "ajax_select" ) {
+					if ( empty($sel["parselcol"]) && empty($sel["partitle"]) ) {
+						if ( $sel["whereval"] == "id" || ( $sel["whereval"] == $sel["wherekey"] && !empty($sel["wherekey"]) ) ) {
+							$wherestring = ' WHERE '.$sel["wherekey"]." = ".$sel["whereval"];
+						} elseif ( !empty($sel["whereval"]) ) {
+							$wherestring = ' WHERE '.$sel["wherekey"]." LIKE ".$sel["whereval"];
+							// !!! CANNOT USE SINGLE OR DOUBLE QUOTES HERE, PLACE IN VAR 
+						} elseif ( !empty($sel["wherekey"]) ) {
+							$wherestring = ' WHERE '.$sel["wherekey"];
+						}
+					} else {
+						$wherestring = "";
+					}
+					$sqlsel_rows = "SELECT ".$sel["selid"].", ".$sel["selname"]." FROM ".$sel["seltable"].$wherestring." ORDER BY ".$sel["selname"];
 					//echo $sqlsel_rows."<br>";
 					$result = db_query($sqlsel_rows);
 					if ( db_num_rows($result) > 0) {
 						// output data of each row
 						$i=0;
 						while ( $row = db_fetch_assoc($result) ) {
-							//$name[$i] = [ [ "key" => $row[$sel["selid"]], "title" => $row[$sel["selname"]] ] ];
-							$name[$i] = [ [ "key" => $row["id"], "title" => $row[$sel["selname"]] ] ];
+							// this allows a non id ket to be the selid
+							$name[$i] = [ [ "key" => $row[$sel["selid"]], "title" => $row[$sel["selname"]] ] ];
+							// this hard codes the selid to be id.... why did I do this?
+							//$name[$i] = [ [ "key" => $row["id"], "title" => $row[$sel["selname"]] ] ];
 							//echo $row[$sel["selid"]].":".$row[$sel["selname"]].";";
 							if ( $i != 0 ) { $name[0] = array_merge($name[0], $name[$i]); }
 							$i++;
@@ -78,6 +83,10 @@ if ( !empty($_GET["page"]) ) {
 					}
 					unset($wherestring);
 					unset($result);
+				} elseif ( !empty($sel["parselcol"]) && !empty($sel["partitle"]) ) {
+					//echo "there: ".$sel["parselcol"]."<br>";
+					$name[0] = [ [ "key" => "selectparent", "value" => $sel["parselcol"], "title" => "Select ".$sel["partitle"]." first" ] ];
+					$lists[$sel["selcol"]] = $name[0];
 				}
 			}
 		}
@@ -109,8 +118,6 @@ if ( !empty($_GET["page"]) ) {
 
 		// Does input_type == dropedit?
 		// insert logic from labtests/spec700 & specs703actual
-		// Does input_type == tableselect && is nested?
-		// insert logic from labtests/transmittal
 		// Attach child record to parent record in crosswalk table
 
 		// Execute job
@@ -170,26 +177,26 @@ if ( !empty($_GET["page"]) ) {
 				// Eg casetracker: clientinfo
 				//  Show in viewtable but not in the addedit form
 				} elseif ( $col["input_type"] == "noform" ) {
-					$fields .= $col["colfunc"]." AS ".str_replace("%T%", "t$i", $col["column"]).",";
+					$fields .= $col["colfunc"]." AS ".str_replace("%T%", "t$i", $col["column"]).", ";
 				// Eg labtest: testroster no addedit form
 				//  [ "column" => "testname", "concatval" => "concat(IF(aashtodesignation = '', '---', aashtodesignation), ' / ', IF(astmdesignation = '', '---', astmdesignation), ' ', testmethod)", "title" => "Test: AASHTO / ASTM", "input_type" => "text", "filterbox" => "text" ],
 				} elseif ( !empty($col["concatval"]) ) {
-					$fields .= $col["concatval"]." AS ".str_replace("%T%", "t$i", $col["column"]).",";
+					$fields .= $col["concatval"]." AS ".str_replace("%T%", "t$i", $col["column"]).", ";
 				// Eg fundsmap: historicalprojects
 				//  Format number to currency or if zero leave --
 				} elseif ( $col["input_type"] == "currency" ) {
 					$tablecolname = "$table.".$col["column"];
-					$fields .= "IF($tablecolname IS NULL OR $tablecolname = '0', '--', concat('$',format($tablecolname, 2))) AS ".$col["column"].",";
+					$fields .= "IF($tablecolname IS NULL OR $tablecolname = '0', '--', CONCAT('$',FORMAT($tablecolname, 2))) AS ".$col["column"].", ";
 				// Eg labtests: testqualification
 				//  Format YYYY/MM/DD to MM/DD/YYYY or leave --
 				} elseif ( $col["input_type"] == "date" ) {
 					$tablecolname = "$table.".$col["column"];
-					$fields .= "IF($tablecolname IS NULL OR $tablecolname = '0000-00-00', '--', date_format($tablecolname, '%m/%d/%Y')) AS ".$col["column"].",";
+					$fields .= "IF($tablecolname IS NULL OR $tablecolname = '0000-00-00', '--', DATE_FORMAT($tablecolname, '%m/%d/%Y')) AS ".$col["column"].", ";
 				// Eg casetracker: clientcases
 				//  Format YYYY/MM/DD 24H to MM/DD/YYYY 12a/p or leave --
 				} elseif ( $col["input_type"] == "datetime" ) {
 					$tablecolname = "$table.".$col["column"];
-					$fields .= "IF($tablecolname IS NULL OR $tablecolname = '0000-00-00 00:00:00', '--', date_format($tablecolname, '%m/%d/%Y %r')) AS ".$col["column"].",";
+					$fields .= "IF($tablecolname IS NULL OR $tablecolname = '0000-00-00 00:00:00', '--', DATE_FORMAT($tablecolname, '%m/%d/%Y %r')) AS ".$col["column"].", ";
 				// Eg casetracker: clientinfo
 				// Produce a Arrow button and display childrecords in a subtable
 				} elseif ( $col["input_type"] == "drilldown" || $col["input_type"] == "crosswalk" ) {
@@ -233,7 +240,11 @@ if ( !empty($_GET["page"]) ) {
 			} elseif ( !empty($wheres) && !empty($addwheres) )
 				$wheres = "WHERE ".rtrim(trim($wheres),"AND").$addwheres;
 
-			$sqlstatement = "SELECT $table.id, $fields FROM $table $ljointables $wheres $groupby $colorderby";
+			if ( $rowlimit > 0 ) {
+				$limitrows = "LIMIT $rowlimit";
+			} else unset($limitrows);
+
+			$sqlstatement = "SELECT $table.id, $fields FROM $table $ljointables $wheres $groupby $colorderby $limitrows";
 			//
 			// END BUILD SQL STATMENT BASED ON CONFIG FILE ARRAYS FOR PAGE
 			//
@@ -386,7 +397,7 @@ if ( !empty($_GET["page"]) ) {
 					}
 				}
 				$sqlstatement = rtrim($sqlstatement, ', ');
-				$sqlstatement .= "WHERE id = '".addslashes($id)."'";
+				$sqlstatement .= " WHERE id = '".addslashes($id)."'";
 				$query = db_query($sqlstatement);
 				if ( !$query ) {
 					$result = "error";
@@ -426,21 +437,24 @@ if ( !empty($_GET["page"]) ) {
 			$nestedtable=urldecode($_GET["nestedtable"]);	//nestedtable={{SELTABLE}}
 			$wherekey=urldecode($_GET["wherekey"]);			//wherekey={{WHEREKEY}}
 			$wherevalue=urldecode($_GET["wherevalue"]);		//whervalue={{WHEREVAL}}
-			$nestedunion=urldecode($_GET["nestedunion"]);	//wherval={{WHEREVAL}}
 			$parentcolumn=urldecode($_GET["parentcolumn"]);	//parentcolumn={{PARSELCOL}}
 			$parenttitle=urldecode($_GET["parenttitle"]);	//parenttitle={{PARTITLE}}
 			$parentid=urldecode($_GET["parentid"]);			//grabbed by jquery event this val
 
-			if ( !empty($nestedunion) ) {
-				$unionstring = " UNION ( SELECT ".$nestedid.", ".$nestedname." as ".$nestedcolumn." FROM ".$nestedunion."=".$parentid." )";
-			}
-			if ( !empty($wherevalue) ) {
-				$wherestring = ' WHERE '.$wherekey." LIKE ".$wherevalue; // !!! CANNOT USE SINGLE OR DOUBLE QUOTES HERE, PLACE IN VAR
-			} elseif ( !empty($wherekey) ) {
-				$wherestring = ' WHERE '.$wherekey;
+			if ( !empty($parentcolumn) ) {
+				// finding the parent table and the parent selid
+				foreach ( $selslist as $k => $sel ) {
+					if ( $selslist[$k]["selcol"] == $parentcolumn ) {
+						$parenttable = $selslist[$k]["seltable"];
+						$parentnestedid = $selslist[$k]["selid"];
+					}
+				}
+				$ljointables = "LEFT JOIN $parenttable AS t1 ON";
 			}
 			//Fetch all state data
-			$sqlstatement = "SELECT t1.".$nestedid.", ".$nestedname." as ".$nestedcolumn." FROM ".$nestedtable.$wherestring." and t2.id = ".$parentid.$unionstring." ORDER BY ".$nestedid." ASC";
+			//this hard codes table as t0 and leftjoin table as t1
+			// t1.nestedid should be the parent selid, also the ljointables should be the parent seltable
+			$sqlstatement = "SELECT t0.$nestedid, t0.$nestedname AS $nestedcolumn FROM $nestedtable AS t0 $ljointables t1.$wherevalue=t0.$wherekey WHERE t1.$parentnestedid='$parentid' ORDER BY t0.$nestedid ASC";
 			$query = db_query($sqlstatement);
 			//Count total number of rows
 			$rowCount = db_num_rows($query);
