@@ -157,7 +157,9 @@ function addedit_form ( columnslist, lists, selslist ) {
 			formhtml += "\t<div class=\"field_container\">\n";
 			// input types
 			if ( col["input_type"] == "textarea" ) {
-			formhtml += "\t\t<textarea class=\"text textarea\" name=\"" + col["column"] + "\" id=\"" + col["column"] + "\"></textarea>\n";
+				formhtml += "\t\t<textarea class=\"text textarea\" name=\"" + col["column"] + "\" id=\"" + col["column"] + "\"></textarea>\n";
+			} else if ( col["input_type"] == "checkbox" ) {
+				formhtml += "\t\t<input type=\"" + col["input_type"] + "\" class=\"text\" name=\"" + col["column"] + "\" id=\"" + col["column"] + "\" value=\"1\" " + errinput + ">\n";
 			} else if ( col["input_type"] == "select" || col["input_type"] == "tableselect" ) {
 				if ( col["multiple"] == "yes" ) {
 					var multiple = " multiple";
@@ -232,7 +234,6 @@ function hide_ipad_keyboard(){
 function addeditdel_record ( action ) {
 	// get all the url GET parameters and values
 	let searchParams = new URLSearchParams(window.location.search);
-	let app = searchParams.get('app');
 	let page = searchParams.get('page');
 	var id, dt_table, configpage;
 	
@@ -282,7 +283,7 @@ function addeditdel_record ( action ) {
 		console.log( action + ' : ' + page + ' : ' + configpage + ' : ' + dt_table + ' : ' + id );
 
 		// Get Record information from database
-		var request = getdata_ajax( job, {'id': id, 'app': app, 'page': configpage} );
+		var request = getdata_ajax( job, {'id': id,'page': configpage} );
 		request.done(function(output){
 			if (output.result == 'success') {
 				if ( action != 'delete' ) {
@@ -317,6 +318,8 @@ function addeditdel_record ( action ) {
 						} else if ( action == 'add' ) {
 							if ( col["multiple"] == "yes" ) {
 								$(columnclass).val() || [];
+							} else if ( col["input_type"] == "checkbox" ) {
+								$(columnclass).val('1');
 							} else if ( col["input_type"] != "drilldown" && col["input_type"] != "crosswalk" ) {
 								$(columnclass).val('');
 							}
@@ -355,9 +358,10 @@ function addeditdel_record ( action ) {
 			hide_lightbox();
 			show_loading_message();
 			var form_data = $('#form_record').serialize();
+			console.log( form_data );
 			form_data = cleanserial_mulsel( form_data, colsls );
 			if ( action == 'add' || action == 'edit' ) {
-				var request = getdata_ajax( action + '_record', form_data + '&id=' + id + '&app=' + app + '&page=' + configpage );
+				var request = getdata_ajax( action + '_record', form_data + '&id=' + id + '&page=' + configpage );
 			}
 			console.log( action + ' : ' + page + ' : ' + configpage + ' : ' + dt_table + ' : ' + id );
 			request.done(function(output){
@@ -443,12 +447,11 @@ function ajaxselect ( attributeid, page, lists, selslist ) {
 				var nestedname = selslist[i]["selname"];
 				var nestedid = selslist[i]["selid"];
 				var nestedtable = selslist[i]["seltable"];
-				var nestedunion = selslist[i]["selunion"];
 				var wherekey = selslist[i]["wherekey"];
 				var wherevalue = selslist[i]["whereval"];
 				var parentcolumn = selslist[i]["parselcol"]; //parentcol
 				var parenttitle = selslist[i]["partitle"];
-				var datastring = '&nestedcolumn=' + encodeURI(nestedcolumn);
+				var datastring = 'nestedcolumn=' + encodeURI(nestedcolumn);
 				datastring += '&nestedname=' + encodeURI(nestedname);
 				datastring += '&nestedid=' + encodeURI(nestedid);
 				datastring += '&nestedtable=' + encodeURI(nestedtable);
@@ -460,6 +463,7 @@ function ajaxselect ( attributeid, page, lists, selslist ) {
 				datastring += '&parentcolumn=' + encodeURI(parentcolumn);
 				datastring += '&parenttitle=' + encodeURI(parenttitle);
 				datastring += '&parentid=' + encodeURI(parentvalue);
+				datastring += '&parenttable=' + encodeURI(parenttable);
 				//console.log( 'nc: ' + nestedcolumn + '; nn: ' + nestedname + '; nid: ' + nestedid + '; nt: ' + nestedtable + '; nu: ' + nestedunion );
 				//console.log( 'wk: ' + wherekey + '; wv: ' + wherevalue + '; pc: ' + parentcolumn + '; pt: ' + parenttitle );
 				//console.log( datastring );
@@ -472,8 +476,8 @@ function ajaxselect ( attributeid, page, lists, selslist ) {
 							$('#' + nestedcolumn).html(html);
 						}
 					});
-				} else {
-					$('#' + nestedcolumn).html('<option value=\"\">Select ' + parenttitle + ' first</option>');
+				//} else {
+				//	$('#' + nestedcolumn).html('<option value=\"\">Select ' + parenttitle + ' First</option>');
 				}
 			}
 		});
