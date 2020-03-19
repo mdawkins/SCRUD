@@ -428,8 +428,19 @@ if ( !empty($_GET["page"]) ) {
 		} elseif ( $job == "page_lists" ) {
 			$result = "success";
 			$message = "page_lists";
-			$query_data = [ "page" => $_GET["page"], "app" => $_GET["app"] ];
+			$query_data = [ "page" => $_GET["page"] ];
 		// End Job: page_lists
+		} elseif ( $job == "attach_record" ) {
+			// none of this works yet
+			// but I'm putting it here as a placeholder and concept
+			$i = array_search($col["column"], array_column($selslist, "selcol"));
+			$colslist = array(
+				[ "column" => $wherekey, "title" => "Record", "input_type" => "select", "disabled" => "disabled" ],
+				[ "column" => $selid, "title" => "Case", "input_type" => "select" ],
+			);
+
+			$result = "success";
+			$message = "attach_record";
 		} elseif ( $job == "ajax_select" ) {
 			$nestedcolumn=urldecode($_GET["nestedcolumn"]);	//nestedcolumn={{SELCOL}}
 			$nestedname=urldecode($_GET["nestedname"]);		//nestedname={{SELNAME}}
