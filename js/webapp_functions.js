@@ -457,14 +457,10 @@ function ajaxselect ( attributeid, page, lists, selslist ) {
 				datastring += '&nestedtable=' + encodeURI(nestedtable);
 				datastring += '&wherekey=' + encodeURI(wherekey);
 				datastring += '&wherevalue=' + encodeURI(wherevalue);
-				if ( nestedunion !== undefined ) {
-					datastring += '&nestedunion=' + encodeURI(nestedunion);
-				}
 				datastring += '&parentcolumn=' + encodeURI(parentcolumn);
 				datastring += '&parenttitle=' + encodeURI(parenttitle);
 				datastring += '&parentid=' + encodeURI(parentvalue);
-				datastring += '&parenttable=' + encodeURI(parenttable);
-				//console.log( 'nc: ' + nestedcolumn + '; nn: ' + nestedname + '; nid: ' + nestedid + '; nt: ' + nestedtable + '; nu: ' + nestedunion );
+				//console.log( 'nc: ' + nestedcolumn + '; nn: ' + nestedname + '; nid: ' + nestedid + '; nt: ' + nestedtable );
 				//console.log( 'wk: ' + wherekey + '; wv: ' + wherevalue + '; pc: ' + parentcolumn + '; pt: ' + parenttitle );
 				//console.log( datastring );
 				if ( parentvalue ) {
