@@ -133,38 +133,36 @@ if ( !empty($_GET["page"]) ) {
 			// Eg. db_connect: implements either mysqli_connect or oci_connect depending on service
 			foreach ( $colslist as $i => $col ) {
 				// IF col input type is a tableselect OR input type is a crosswalk and the main datatables table variable is not maintable
-				if ( ( $col["input_type"] == "tableselect" || ( $col["input_type"] == "crosswalk" && $_GET["dt_table"] != "maintable") )
+				if ( ( $col["input_type"] == "tableselect" || ( $col["input_type"] == "crosswalk" && $_GET["dt_table"] != "maintable") ) && array_search($col["column"], array_column($selslist, "selcol")) !== null ) {
 					// AND selslist "selcol" == colslist "column"
 					// This basic array mapping
-					&& array_search($col["column"], array_column($selslist, "selcol")) !== null ) {
 					foreach ( $selslist as $k => $sel ) {
 						if ( $col["column"] == $sel["selcol"] ) {
 							$searchcol = $sel["selname"];
-							$ljointables .= "LEFT JOIN ".$sel["seltable"]." AS t$i ON ";
-							// IF col input type is select/tableselect with multiple options to be selected
-							if ( $col["multiple"] == "yes" ) {
-								// replace %T% with table alias
-								$fields .= str_replace("%T%", "t$i", "GROUP_CONCAT(".$sel["selname"]." ORDER BY 1 SEPARATOR ', ') AS ".$col["column"]).",";
-								$ljointables .= $table.".".$col["column"]." LIKE CONCAT('%', t$i.".$sel["selid"].", '%') ";
-								$groupby = "GROUP BY $table.".$col["column"];
-							// IF tableselect value needs to concatenate multiple columns into one field
-							// Eg Labtests: testqualification:
-							// [ "column" => "testid", "title" => "Test: AASHTO / ASTM", "required" => "yes", "input_type" => "tableselect", "concatfield" => "yes" ],
-							// [ "selcol" => "testid", "selname" => "concat(IF(aashtodesignation = '', '---', aashtodesignation), ' / ', IF(astmdesignation = '', '---', astmdesignation), ' ', testmethod)", "selid" => "id", "seltable" => "accreditedtests", "wherekey" => "", "whereval" => "" ],
-							} elseif ( $col["concatfield"] == "yes" ) {
-								$fields .= str_replace("%T%", "t$i", $sel["selname"]." AS ".$col["column"]).",";
+							// don't join unless we need to only with crosswalk table not eq to childtable OR specify seljoin = yes
+							if ( ($col["input_type"] == "crosswalk" && $sel["seltable"] != $table) || $sel["seljoin"] == "yes" ) {
+								$ljointables .= "LEFT JOIN ".$sel["seltable"]." AS t$i ON ";
+							}
+
+							if ( $col["input_type"] == "crosswalk" ) {
+							   	if ( $sel["seltable"] != $table ) {
+									// honestly this is backwards, the selid should = id
+									if ( empty($sel["selname"]) ) {
+										$sel["selname"] = "id";
+									}
+									$ljointables .= $table.".".$sel["selname"]." = t$i.".$sel["selid"]." ";
+									$wheres .= "t$i.".$sel["wherekey"]." = $id AND"; 
+								} else {
+									$wheres .= "$table.".$sel["wherekey"]." = $id AND"; 
+								}
+								// else no field for crosswalk
+							} elseif ( $sel["seljoin"] == "yes" ) {
+								$fields .= "t$i.".$sel["selname"]." AS ".$col["column"].", ";
 								$ljointables .= $table.".".$col["column"]." = t$i.".$sel["selid"]." ";
-							// IF col input type is crosswalk and we are attaching a child drilldown table to the parent record
-							// Eg Casetracker: caseinfo: via embedded/child config file
-							// [ "column" => "crosswalkclientscases", "title" => "Crosswalk", "input_type" => "crosswalk" ],
-							// [ "selcol" => "crosswalkclientscases", "selname" => "", "selid" => "caseid", "seltable" => "crosswalkclientscases", "wherekey" => "clientid", "whereval" => "" ],
-							} elseif ( $col["input_type"] == "crosswalk" ) {
-								$ljointables .= $table.".id = t$i.".$sel["selid"]." ";
-								$wheres .= "t$i.".$sel["wherekey"]." = $id AND"; 
+							// why use left joins when the data is the same on the datatable but this is used to create tableselects in the forms
 							// Default logic if col input type is tableselect
 							} else {
-								$fields .= "t$i.".$sel["selname"]." AS ".$col["column"].",";
-								$ljointables .= $table.".".$col["column"]." = t$i.".$sel["selid"]." ";
+								$fields .= "$table.".$col["column"].", ";
 							}
 						}
 					} 
@@ -178,10 +176,6 @@ if ( !empty($_GET["page"]) ) {
 				//  Show in viewtable but not in the addedit form
 				} elseif ( $col["input_type"] == "noform" ) {
 					$fields .= $col["colfunc"]." AS ".str_replace("%T%", "t$i", $col["column"]).", ";
-				// Eg labtest: testroster no addedit form
-				//  [ "column" => "testname", "concatval" => "concat(IF(aashtodesignation = '', '---', aashtodesignation), ' / ', IF(astmdesignation = '', '---', astmdesignation), ' ', testmethod)", "title" => "Test: AASHTO / ASTM", "input_type" => "text", "filterbox" => "text" ],
-				} elseif ( !empty($col["concatval"]) ) {
-					$fields .= $col["concatval"]." AS ".str_replace("%T%", "t$i", $col["column"]).", ";
 				// Eg fundsmap: historicalprojects
 				//  Format number to currency or if zero leave --
 				} elseif ( $col["input_type"] == "currency" ) {
@@ -221,8 +215,8 @@ if ( !empty($_GET["page"]) ) {
 					} elseif ( $col["filterbox"] == "text" && !empty(${$col["column"]}) ) {
 						if ( $col["input_type"] == "tableselect" ) {
 							$addwheres .= " AND $searchcol LIKE '%".${$col["column"]}."%' ";
-						} elseif ( !empty($col["concatval"]) ) {
-							$addwheres .= " AND ".$col["concatval"]." LIKE '%".${$col["column"]}."%' ";
+						} elseif ( !empty($col["colfunc"]) ) { // concat val
+							$addwheres .= " AND ".$col["colfunc"]." LIKE '%".${$col["column"]}."%' ";
 						} else {
 							$addwheres .= " AND ".$col["column"]." LIKE '%".${$col["column"]}."%' ";
 						}

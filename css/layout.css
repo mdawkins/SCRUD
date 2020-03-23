@@ -233,7 +233,7 @@ button.button:active {
   line-height: 30px;
 }
 .dataTables_filter input {
-  width: 200px;
+  width: 100px;
   height: 30px;
   display: inline-block;
   background-color: #fff;
