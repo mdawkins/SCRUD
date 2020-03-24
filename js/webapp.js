@@ -6,21 +6,20 @@ $(document).ready(function() {
 	let page = searchParams.get('page');
 
 	// set variables needed for maintable
-	var pginfo, colsls, lists, selslist, rowfmt, sql;
+	var pginfo, colsls, rowfmt;
+	var lists;
 	var pagetitle, table, showidcolumn, showrownum, showdeletecolumn, colorderby, rowlimit;
 	var jsondtcolumns, jsonfiltercolumns, rwfmt;
 
-	var request = getdata_ajax( 'page_lists', {'page': page} );
+	var request = getdata_ajax( 'page_info', {'page': page} );
 	request.done(function(output) {
-		if (output.result == 'success' && output.message == 'page_lists') {
+		if (output.result == 'success' && output.message == 'page_info') {
 			// assign individual variables to their values
 			for (let key in output.pginfo) {
 				var varname = key + ' = \"' + output.pginfo[key] + '\"';
 				eval(varname);
 			}
 			colsls = output.colsls;
-			lists = output.lists;
-			selslist = output.selslist;
 			rowfmt = output.rowfmt;
 		}
 		// Set page title
@@ -31,6 +30,13 @@ $(document).ready(function() {
 		// Set CSS for rowformat
 		if ( rowfmt != null ) {
 			$("head").append( rowformat( rowfmt, '#fff', '#ddd', '#ffd' ) );
+			// calling page_lists here
+			var request = getdata_ajax( 'page_lists', {'page': page} );
+			request.done(function(output) {
+				if (output.result == 'success' && output.message == 'page_lists') {
+					lists = output.lists;
+				}
+			});
 		}
 
 		// On page load: datatable
@@ -124,8 +130,6 @@ $(document).ready(function() {
 			e.preventDefault();
 			maintable.colReorder.reset();
 		});
-		// Capture Parent Select change
-		ajaxselect ( '#form_record', page, lists, selslist );
 
 		// Add Record button & submit form
 		addeditdel_record( 'add' );
@@ -150,22 +154,23 @@ $(document).ready(function() {
 			colsls.forEach(function(col) {
 				if ( col["input_type"] == "drilldown" ) {
 					// set variables needed for childtable
-					var pginfo, ch_colsls, ch_lists, ch_rowfmt;
+					//var pginfo, ch_colsls, ch_lists, ch_rowfmt;
+					var pginfo, ch_colsls;
 					var pagetitle, table, showidcolumn, showrownum, showdeletecolumn, colorderby, rowlimit;
 					var jsondtcolumns, jsonfiltercolumns, rwfmt;
 
 					let subpage = col["column"];
-					var request = getdata_ajax( 'page_lists', {'page': subpage} );
+					var request = getdata_ajax( 'page_info', {'page': subpage} );
 					request.done(function(output) {
-						if (output.result == 'success' && output.message == 'page_lists') {
+						if (output.result == 'success' && output.message == 'page_info') {
 							// assign individual variables to their values
 							for (let key in output.pginfo) {
 								var varname = key + ' = \"' + output.pginfo[key] + '\"';
 								eval(varname);
 							}
 							ch_colsls = output.colsls;
-							ch_lists = output.lists;
-							ch_rowfmt = output.rowfmt;
+							//ch_lists = output.lists;
+							//ch_rowfmt = output.rowfmt;
 						}
 						var tablecount=1;
 

@@ -14,7 +14,7 @@ if ( !empty($_GET["page"]) ) {
 	$job = $id = "";
 	if ( isset($_GET["job"]) ) {
 		$job = $_GET["job"];
-		if ( $job == "get_records" || $job == "get_record" || $job == "add_record" || $job == "edit_record" || $job == "delete_record" || $job == "page_lists" || $job == "attach_record" || $job == "ajax_select" ) {
+		if ( $job == "get_records" || $job == "get_record" || $job == "add_record" || $job == "edit_record" || $job == "delete_record" || $job == "page_info" || $job == "page_lists" || $job == "attach_record" || $job == "ajax_select" ) {
 			if ( isset($_GET["id"]) ) {
 				$id = $_GET["id"];
 				if ( !is_numeric($id) ) {
@@ -401,6 +401,7 @@ if ( !empty($_GET["page"]) ) {
 					$message = "query success";
 				}
 			}
+			$query_data = [ "page" => $_GET["page"] ];
 		// END job: edit_record
 		} elseif ( $job == "delete_record" ) {
 			// Delete Record: Needs to be verified to work with Oracle
@@ -418,7 +419,13 @@ if ( !empty($_GET["page"]) ) {
 					$message = "query success";
 				}
 			}
+			$query_data = [ "page" => $_GET["page"] ];
 		// End Job: delete_record
+		} elseif ( $job == "page_info" ) {
+			$result = "success";
+			$message = "page_info";
+			$query_data = [ "page" => $_GET["page"] ];
+		// End Job: page_info
 		} elseif ( $job == "page_lists" ) {
 			$result = "success";
 			$message = "page_lists";
@@ -482,19 +489,72 @@ if ( !empty($_GET["page"]) ) {
 	}
 }
 if ( $job != "ajax_select" ) {	
-	// Prepare dat from info in config file arrays
-	$data = array(
-		"pginfo"  => $pageinfo, // page directives. Ex: Title, table, pagination, etc
-		"colsls"  => $colslist, // columns and col settings
-		"lists"   => $lists, // support non-db data lists
-		"selslist"  => $selslist, // list of lookup table related info for dropdowns and joins
-		"rowfmt"  => $rowformat, // allows for visual formatting of rows based on row data
-		"sql"     => $sqlstatement, // generated sql statement for page
-		"result"  => $result, // if $query true = success, else $query false = error
-		"message" => $message, // message from qry execuction (select, insert, update, delete)
-		"data"    => $query_data, // data returned from "get_records" and "get_record"
-		"lastid"  => $lastid, // pk_id of inserted
-	);
+	// Prepare data from info in config file arrays
+	// depending on the page only send the data necessary
+	// all pages need: result, message, data
+	// get_records: needs data, rowfmt; helpful: pginfo, sql 
+	// get_record: needs data, colsls, lists; helpful: sql 
+	// page_info: needs pginfo, colsls
+	// page_lists: needs colsls, lists; helpful selslist
+	if ( $job == "get_records" ) {
+		$data = array(
+			"rowfmt"  => $rowformat, // allows for visual formatting of rows based on row data
+			"sql"     => $sqlstatement, // generated sql statement for page
+			"result"  => $result, // if $query true = success, else $query false = error
+			"message" => $message, // message from qry execuction (select, insert, update, delete)
+			"data"    => $query_data, // data returned from "get_records" and "get_record"
+		);
+	} elseif ( $job == "get_record" || $job == "page_lists" ) { // page_list does not require the sql statement
+		$data = array(
+			//"pginfo"  => $pageinfo, // page directives. Ex: Title, table, pagination, etc
+			"colsls"  => $colslist, // columns and col settings
+			"lists"   => $lists, // support non-db data lists
+			"selslist"  => $selslist, // list of lookup table related info for dropdowns and joins
+			"sql"     => $sqlstatement, // generated sql statement for page
+			"result"  => $result, // if $query true = success, else $query false = error
+			"message" => $message, // message from qry execuction (select, insert, update, delete)
+			"data"    => $query_data, // data returned from "get_records" and "get_record"
+		);
+	} elseif ( $job == "add_record" ) {
+		$data = array(
+			"pginfo"  => $pageinfo, // page directives. Ex: Title, table, pagination, etc
+			"sql"     => $sqlstatement, // generated sql statement for page
+			"result"  => $result, // if $query true = success, else $query false = error
+			"message" => $message, // message from qry execuction (select, insert, update, delete)
+			"data"    => $query_data, // data returned from "get_records" and "get_record"
+			"lastid"  => $lastid, // pk_id of inserted
+		);
+	} elseif ( $job == "delete_record" || $job == "edit_record" || $job == "attach_record" ) {
+		$data = array(
+			"pginfo"  => $pageinfo, // page directives. Ex: Title, table, pagination, etc
+			"sql"     => $sqlstatement, // generated sql statement for page
+			"result"  => $result, // if $query true = success, else $query false = error
+			"message" => $message, // message from qry execuction (select, insert, update, delete)
+			"data"    => $query_data, // data returned used to double check that the correct request came back
+		);
+	} elseif ( $job == "page_info" ) {
+		$data = array(
+			"pginfo"  => $pageinfo, // page directives. Ex: Title, table, pagination, etc
+			"colsls"  => $colslist, // columns and col settings
+			"rowfmt"  => $rowformat, // allows for visual formatting of rows based on row data
+			"result"  => $result, // if $query true = success, else $query false = error
+			"message" => $message, // message from qry execuction (select, insert, update, delete)
+			"data"    => $query_data, // data returned used to double check that the correct request came back
+		);
+	} else { // Show all objects/arrays
+		$data = array(
+			"pginfo"  => $pageinfo, // page directives. Ex: Title, table, pagination, etc
+			"colsls"  => $colslist, // columns and col settings
+			"lists"   => $lists, // support non-db data lists
+			"selslist"  => $selslist, // list of lookup table related info for dropdowns and joins
+			"rowfmt"  => $rowformat, // allows for visual formatting of rows based on row data
+			"sql"     => $sqlstatement, // generated sql statement for page
+			"result"  => $result, // if $query true = success, else $query false = error
+			"message" => $message, // message from qry execuction (select, insert, update, delete)
+			"data"    => $query_data, // data returned from "get_records" and "get_record"
+			"lastid"  => $lastid, // pk_id of inserted
+		);
+	}
 
 	// Convert PHP array to JSON array
 	$json_data = json_encode($data);

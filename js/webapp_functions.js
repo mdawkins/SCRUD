@@ -339,6 +339,9 @@ function addeditdel_record ( action ) {
 				hide_loading_message();
 				show_message('Information request failed', 'error');
 			}
+
+			// Capture Parent Select change for cascade/nested selects
+			ajaxselect ( '#form_record', page, output.lists, output.selslist );
 		});
 		request.fail(function(jqXHR, textStatus){
 			hide_loading_message();
