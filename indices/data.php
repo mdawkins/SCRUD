@@ -132,8 +132,8 @@ if ( !empty($_GET["page"]) ) {
 			// implements the appropriate DB function calls inside SCRUD's DB functions
 			// Eg. db_connect: implements either mysqli_connect or oci_connect depending on service
 			foreach ( $colslist as $i => $col ) {
-				// IF col input type is a tableselect OR input type is a crosswalk and the main datatables table variable is not maintable
-				if ( ( $col["input_type"] == "tableselect" || ( $col["input_type"] == "crosswalk" && $_GET["dt_table"] != "maintable") ) && array_search($col["column"], array_column($selslist, "selcol")) !== null ) {
+				// IF col input type is a tableselect OR input type is a crosswalk and selcol can be found in columns colslist
+				if ( ( $col["input_type"] == "tableselect" || $col["input_type"] == "crosswalk" ) && array_search($col["column"], array_column($selslist, "selcol")) !== null ) {
 					// AND selslist "selcol" == colslist "column"
 					// This basic array mapping
 					foreach ( $selslist as $k => $sel ) {
@@ -146,16 +146,26 @@ if ( !empty($_GET["page"]) ) {
 
 							if ( $col["input_type"] == "crosswalk" ) {
 							   	if ( $sel["seltable"] != $table ) {
+									$cwtable = "t$i";
 									// honestly this is backwards, the selid should = id
 									if ( empty($sel["selname"]) ) {
 										$sel["selname"] = "id";
 									}
-									$ljointables .= $table.".".$sel["selname"]." = t$i.".$sel["selid"]." ";
-									$wheres .= "t$i.".$sel["wherekey"]." = $id AND"; 
+									if ( !empty($sel["parselcol"]) ) {
+										// left join to another table than the config file table
+										$partable = "t".array_search( $sel["parselcol"], array_column($colslist, "column") );
+									} else {
+										$partable = $table;
+									}
+									$ljointables .= $partable.".".$sel["selname"]." = t$i.".$sel["selid"]." ";
 								} else {
-									$wheres .= "$table.".$sel["wherekey"]." = $id AND"; 
+									// else no field for crosswalk
+									$cwtable = $table;
 								}
-								// else no field for crosswalk
+								if ( $_GET["dt_table"] != "maintable" ) {
+									$wheres .= "$cwtable.".$sel["wherekey"]." = $id AND"; 
+								} // else no wheres for crosswalk tables not used in child configs
+
 							} elseif ( $sel["seljoin"] == "yes" ) {
 								$fields .= "t$i.".$sel["selname"]." AS ".$col["column"].", ";
 								$ljointables .= $table.".".$col["column"]." = t$i.".$sel["selid"]." ";
