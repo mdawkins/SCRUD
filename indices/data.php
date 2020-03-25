@@ -162,7 +162,7 @@ if ( !empty($_GET["page"]) ) {
 									// else no field for crosswalk
 									$cwtable = $table;
 								}
-								if ( $_GET["dt_table"] != "maintable" ) {
+								if ( $_GET["dt_table"] != "maintable" && !empty($_GET["dt_table"]) ) {
 									$wheres .= "$cwtable.".$sel["wherekey"]." = $id AND"; 
 								} // else no wheres for crosswalk tables not used in child configs
 
