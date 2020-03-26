@@ -445,10 +445,10 @@ table.datatable tbody td.functions .function_buttons .function_delete a:before {
 }
 table.datatable tbody td.functions .function_buttons .function_drilldown a:before {
   font-size: 1.1rem;
-  content: "\f063";
+  content: "\f061";
 }
 table.datatable tbody .collapse td.functions .function_buttons .function_drilldown a:before {
-  content: "\f061";
+  content: "\f063";
 }
 table.datatable tbody td.functions .function_buttons a:hover,
 table.datatable tbody td.functions .function_buttons a:active,
