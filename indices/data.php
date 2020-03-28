@@ -272,14 +272,13 @@ if ( !empty($_GET["page"]) ) {
 					$k=0;
 					foreach ( $colslist as $i => $col ) {
 						// modify data
-						// handle lists data eg iinput type select or tableselect
-						if ( $col["input_type"] == "select" || $col["input_type"] == "tableselect" ) {
+						// handle lists key/value string replace for input type select
+						if ( $col["input_type"] == "select" && ($col["keyreplace"] != "no" || $col["colview"] != "hide") ) {
 							foreach ( $lists[$col["column"]] as $lst ) {
 								$row[$col["column"]] = str_replace($lst["key"], $lst["title"], $row[$col["column"]]);
 							}
-							if ( $col["multiple"] == "yes" ) {
+						} elseif ( $col["multiple"] == "yes" && ($col["input_type"] == "select" || $col["input_type"] == "tableselect") ) {
 								$row[$col["column"]] = str_replace(";", "/", $row[$col["column"]]);
-							}
 						// handle input type checkbox
 						} elseif ( $col["input_type"] == "checkbox" ) {
 							if ( $row[$col["column"]] == 1 ) {
@@ -289,8 +288,13 @@ if ( !empty($_GET["page"]) ) {
 							}
 						// handle input drilldown
 						} elseif ( $col["input_type"] == "drilldown" ) {
+							if ( isset($col["columnid"]) ) {
+								$rowid = $col["columnid"];
+							} else {
+								$rowid = "id";
+							}
 							$row[$col["column"]] = '<div class="function_buttons"><ul>';
-							$row[$col["column"]] .= '<li class="function_drilldown"><a data-id="'.$row["id"].'" data-name="'.$col["column"].'"><span>Show</span></a></li>';
+							$row[$col["column"]] .= '<li class="function_drilldown"><a data-id="'.$row[$rowid].'" data-name="'.$col["column"].'"><span>Show</span></a></li>';
 							$row[$col["column"]] .= '</ul></div>';
 						// Ignore crosswalk input type; this is only used in child records/nested tables
 						} elseif ( $col["input_type"] == "crosswalk" ) {
@@ -359,12 +363,17 @@ if ( !empty($_GET["page"]) ) {
 				if ( $col["input_type"] == "crosswalk" ) {
 					$crosswalk = 1;
 					foreach ( $selslist as $k => $sel ) {
-						if ( $col["column"] == $sel["selcol"] ) {
+						// if parselcol is empty or !isset bc crosswalk + parselcol can be used to left join sibling columns that are keyed to other tables
+						if ( $col["column"] == $sel["selcol"] && $sel["seltable"] != $table ) {
 							$selid = $sel["selid"];
 							$wherekey = $sel["wherekey"];
 							$seltable = $sel["seltable"];
 							$getid = addslashes($_GET["id"]);
 						}
+						//else {
+						//	$selid = $sel["selid"];
+						//	$getid = addslashes($_GET["id"]);
+						//}
 					}
 				}
 			}
