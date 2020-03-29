@@ -151,70 +151,70 @@ $(document).ready(function() {
 			}
 		}
 		if ( issetdrilldown === 1 ) {
-			colsls.forEach(function(col) {
-				if ( col["input_type"] == "drilldown" ) {
-					// set variables needed for childtable
-					//var pginfo, ch_colsls, ch_lists, ch_rowfmt;
-					var pginfo, ch_colsls;
-					var pagetitle, table, showidcolumn, showrownum, showdeletecolumn, colorderby, rowlimit;
-					var jsondtcolumns, jsonfiltercolumns, rwfmt;
+			// Show Drill Down table
+			var tablecount=1;
+			$(document).on('click', '.function_drilldown a', function(e) {
+				e.preventDefault();
+				// set variables needed for childtable
+				//var pginfo, ch_colsls, ch_lists, ch_rowfmt;
+				var pginfo, ch_colsls;
+				var pagetitle, table, showidcolumn, showrownum, showdeletecolumn, colorderby, rowlimit;
+				var jsondtcolumns, jsonfiltercolumns, rwfmt;
 
-					let subpage = col["column"];
-					var request = getdata_ajax( 'page_info', {'page': subpage} );
-					request.done(function(output) {
-						if (output.result == 'success' && output.message == 'page_info') {
-							// assign individual variables to their values
-							for (let key in output.pginfo) {
-								var varname = key + ' = \"' + output.pginfo[key] + '\"';
-								eval(varname);
-							}
-							ch_colsls = output.colsls;
-							//ch_lists = output.lists;
-							//ch_rowfmt = output.rowfmt;
+				// Get Child Records linked to id
+				let id = $(this).data('id');
+				let subpage = $(this).data('name');
+				var request = getdata_ajax( 'page_info', {'page': subpage} );
+
+				var tr = $(this).closest('tr');
+				var row = maintable.row( tr );
+				console.log( tr );
+				console.log( row );
+
+				request.done(function(output) {
+					if (output.result == 'success' && output.message == 'page_info') {
+						// assign individual variables to their values
+						for (let key in output.pginfo) {
+							var varname = key + ' = \"' + output.pginfo[key] + '\"';
+							eval(varname);
 						}
-						var tablecount=1;
+						ch_colsls = output.colsls;
+						//ch_lists = output.lists;
+						//ch_rowfmt = output.rowfmt;
+					}
 
-						// Show Drill Down table
-						$(document).on('click', '.function_drilldown a', function(e) {
-							e.preventDefault();
-							// Get Child Records linked to id
-							var id = $(this).data('id');
-							//var subpage	= $(this).data('name'); // duplicate
-
-							var tr = $(this).closest('tr');
-							var row = maintable.row( tr );
-
-							if ( row.child.isShown() ) {
-								// This row is already open - close it
-								row.child.hide();
-								tr.removeClass('collapse');
-							} else {
-								// Open this row
-								row.child( format_header_id( dt_header( ch_colsls, subpage + '_##ID##', '', showdeletecolumn, id, subpage ), tablecount ) ).show();
-								tr.addClass('collapse');
-							}
-							//show_loading_message();
-							var childtable = $('#' + subpage + '_' + tablecount).DataTable({
-								"bPaginate": false,
-								"bSortable": false,
-								"searching": false,
-								"paging": false,
-								"info": false,
-								"ajax": {
-									"url": 'data.php?job=get_records',
-									"cache": true,
-									"data": {'id': id ,'page': subpage, 'dt_table': subpage},
-									"dataType": 'json',
-									"contentType": 'application/json; charset=utf-8',
-									"type": 'get'
-									},
-								"columns": json_dtcolumns( ch_colsls, 'no', showdeletecolumn ),
-								"aoColumnDefs": [ { "bSortable": false, "aTargets": [-1] } ],
-							});
-							tablecount++;
-						});
+					if ( row.child.isShown() ) {
+						// This row is already open - close it
+						row.child.hide();
+						tr.removeClass('collapse');
+					} else {
+						// Open this row
+						console.log( "here" + ' : ' + subpage + '_##ID##' + ' : ' + id + ' : ' + tablecount + ' : ' + showdeletecolumn);
+						console.log( ch_colsls );
+						console.log( format_header_id( dt_header( ch_colsls, subpage + '_##ID##', '', showdeletecolumn, id, subpage ), tablecount ) ); 
+						row.child( format_header_id( dt_header( ch_colsls, subpage + '_##ID##', '', showdeletecolumn, id, subpage ), tablecount ) ).show();
+						tr.addClass('collapse');
+					}
+					//show_loading_message();
+					var childtable = $('#' + subpage + '_' + tablecount).DataTable({
+						"bPaginate": false,
+						"bSortable": false,
+						"searching": false,
+						"paging": false,
+						"info": false,
+						"ajax": {
+							"url": 'data.php?job=get_records',
+							"cache": true,
+							"data": {'id': id ,'page': subpage, 'dt_table': subpage},
+							"dataType": 'json',
+							"contentType": 'application/json; charset=utf-8',
+							"type": 'get'
+							},
+						"columns": json_dtcolumns( ch_colsls, 'no', showdeletecolumn ),
+						"aoColumnDefs": [ { "bSortable": false, "aTargets": [-1] } ],
 					});
-				}
+				});
+				tablecount++;
 			});
 		}
 		// end of issetdrilldown
