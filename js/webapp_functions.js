@@ -482,3 +482,61 @@ function ajaxselect ( attributeid, page, lists, selslist ) {
 		});
 	});
 }
+function drilldowntable ( parenttable ) {
+	// Show Drill Down table
+	var tablecount=1;
+	$(document).on('click', '.function_drilldown a', function(e) {
+		e.preventDefault();
+		// set variables needed for childtable
+		//var pginfo, ch_colsls, ch_lists, ch_rowfmt;
+		var pginfo, ch_colsls;
+		var pagetitle, table, showidcolumn, showrownum, showdeletecolumn, colorderby, rowlimit;
+		var jsondtcolumns, jsonfiltercolumns, rwfmt;
+			// Get Child Records linked to id
+		let id = $(this).data('id');
+		let subpage = $(this).data('name');
+		var request = getdata_ajax( 'page_info', {'page': subpage} );
+			var tr = $(this).closest('tr');
+		var row = parenttable.row( tr );
+			request.done(function(output) {
+			if (output.result == 'success' && output.message == 'page_info') {
+				// assign individual variables to their values
+				for (let key in output.pginfo) {
+					var varname = key + ' = \"' + output.pginfo[key] + '\"';
+					eval(varname);
+				}
+				ch_colsls = output.colsls;
+				//ch_lists = output.lists;
+				//ch_rowfmt = output.rowfmt;
+			}
+				if ( row.child.isShown() ) {
+				// This row is already open - close it
+				row.child.hide();
+				tr.removeClass('collapse');
+			} else {
+				// Open this row
+				row.child( format_header_id( dt_header( ch_colsls, subpage + '_##ID##', '', showdeletecolumn, id, subpage ), tablecount ) ).show();
+				tr.addClass('collapse');
+			}
+			//show_loading_message();
+			var childtable = $('#' + subpage + '_' + tablecount).DataTable({
+				"bPaginate": false,
+				"bSortable": false,
+				"searching": false,
+				"paging": false,
+				"info": false,
+				"ajax": {
+					"url": 'data.php?job=get_records',
+					"cache": true,
+					"data": {'id': id ,'page': subpage, 'dt_table': subpage},
+					"dataType": 'json',
+					"contentType": 'application/json; charset=utf-8',
+					"type": 'get'
+					},
+				"columns": json_dtcolumns( ch_colsls, 'no', showdeletecolumn ),
+				"aoColumnDefs": [ { "bSortable": false, "aTargets": [-1] } ],
+			});
+		});
+		tablecount++;
+	});
+}
