@@ -55,11 +55,12 @@ if ( !empty($_GET["page"]) ) {
 				// This identifies that the select is cascading/nested to a parent select
 				if ( $job != "ajax_select" ) {
 					if ( empty($sel["parselcol"]) && empty($sel["partitle"]) ) {
-						if ( $sel["whereval"] == "id" || ( $sel["whereval"] == $sel["wherekey"] && !empty($sel["wherekey"]) ) ) {
-							$wherestring = ' WHERE '.$sel["wherekey"]." = ".$sel["whereval"];
-						} elseif ( !empty($sel["whereval"]) ) {
+					// !!! CANNOT USE SINGLE OR DOUBLE QUOTES HERE, PLACE IN VAR 
+						// if there is a wildcard use LIKE AND key & value are not empty
+						if ( preg_match('/%/', $sel["wherekey"]) || preg_match('/%/', $sel["whereval"]) && (!empty($sel["wherekey"]) && !empty($sel["whereval"])) ) {
 							$wherestring = ' WHERE '.$sel["wherekey"]." LIKE ".$sel["whereval"];
-							// !!! CANNOT USE SINGLE OR DOUBLE QUOTES HERE, PLACE IN VAR 
+						} elseif ( !empty($sel["wherekey"]) && !empty($sel["whereval"]) ) {
+							$wherestring = ' WHERE '.$sel["wherekey"]." = ".$sel["whereval"];
 						} elseif ( !empty($sel["wherekey"]) ) {
 							$wherestring = ' WHERE '.$sel["wherekey"];
 						}
