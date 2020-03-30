@@ -1,4 +1,5 @@
 <?php
+$eta = -microtime(true);
 if ( !empty($_GET["page"]) ) {
 	require_once "pages/".$_GET["page"].".php";
 	if( isset($colorderby) ) {
@@ -9,6 +10,8 @@ if ( !empty($_GET["page"]) ) {
 	// Database details
 	require_once ".serv.conf";
 	require_once "$funcroot/dbconnection.php";
+	// performance time
+	$timecheck[] = $eta + microtime(true);
 
 	// Get job (and id)
 	$job = $id = "";
@@ -37,17 +40,16 @@ if ( !empty($_GET["page"]) ) {
 			$message = "Failed to connect to database: ".mysqli_connect_error();
 			$job = "";
 		}
+		// performance time
+		$timecheck[] = $eta + microtime(true);
 
-		// BN - Is tableselect, essentially a file of non-db 'table' data?
-		// or just the opposite? Go get data from a table for select drop downs?
-		// MD - tableselect is a html select where its options are generated from
+		// tableselect is a html select where its options are generated from
 		// a DB table query. It requieres a valid array pair bewtween selslist & colslist
-		// eg: casetracker>clientcases> "selcol" => "attorneyid" pairs to "column" => "attorneyid"
 		// the following code, converts the selslist array into lists array with populated
 		// "key" and "title" values.
 
-		// Does input_type == tableselect?
-		if ( array_search( "tableselect", array_column( $colslist, "input_type" ) ) !== null ) {
+		// Does input_type == tableselect? AND job == page_lists OR ajax_select OR get_record- this logic is super costly!
+		if ( array_search( "tableselect", array_column( $colslist, "input_type" ) ) !== null && ($job == "page_lists" || $job == "ajax_select" || $job == "get_record") ) {
 			// create array for creating select dropdown list
 			foreach ( $selslist as $sel ) {
 				// This identifies that the select is cascading/nested to a parent select
@@ -115,6 +117,9 @@ if ( !empty($_GET["page"]) ) {
 				$joinwhereval = $key["whereval"];
 			}
 		}
+
+		// performance time
+		$timecheck[] = $eta + microtime(true);
 
 		// Does input_type == dropedit?
 		// insert logic from labtests/spec700 & specs703actual
@@ -506,6 +511,8 @@ if ( !empty($_GET["page"]) ) {
 		// Close database connection
 		db_close($conn);
 	}
+	// performance time
+	$timecheck[] = $eta + microtime(true);
 }
 if ( $job != "ajax_select" ) {	
 	// Prepare data from info in config file arrays
@@ -522,6 +529,7 @@ if ( $job != "ajax_select" ) {
 			"result"  => $result, // if $query true = success, else $query false = error
 			"message" => $message, // message from qry execuction (select, insert, update, delete)
 			"data"    => $query_data, // data returned from "get_records" and "get_record"
+			"time"    => $timecheck,
 		);
 	} elseif ( $job == "get_record" || $job == "page_lists" ) { // page_list does not require the sql statement
 		$data = array(
@@ -533,6 +541,7 @@ if ( $job != "ajax_select" ) {
 			"result"  => $result, // if $query true = success, else $query false = error
 			"message" => $message, // message from qry execuction (select, insert, update, delete)
 			"data"    => $query_data, // data returned from "get_records" and "get_record"
+			"time"    => $timecheck,
 		);
 	} elseif ( $job == "add_record" ) {
 		$data = array(
@@ -542,6 +551,7 @@ if ( $job != "ajax_select" ) {
 			"message" => $message, // message from qry execuction (select, insert, update, delete)
 			"data"    => $query_data, // data returned from "get_records" and "get_record"
 			"lastid"  => $lastid, // pk_id of inserted
+			"time"    => $timecheck,
 		);
 	} elseif ( $job == "delete_record" || $job == "edit_record" || $job == "attach_record" ) {
 		$data = array(
@@ -550,6 +560,7 @@ if ( $job != "ajax_select" ) {
 			"result"  => $result, // if $query true = success, else $query false = error
 			"message" => $message, // message from qry execuction (select, insert, update, delete)
 			"data"    => $query_data, // data returned used to double check that the correct request came back
+			"time"    => $timecheck,
 		);
 	} elseif ( $job == "page_info" ) {
 		$data = array(
@@ -559,6 +570,7 @@ if ( $job != "ajax_select" ) {
 			"result"  => $result, // if $query true = success, else $query false = error
 			"message" => $message, // message from qry execuction (select, insert, update, delete)
 			"data"    => $query_data, // data returned used to double check that the correct request came back
+			"time"    => $timecheck,
 		);
 	} else { // Show all objects/arrays
 		$data = array(
@@ -572,6 +584,7 @@ if ( $job != "ajax_select" ) {
 			"message" => $message, // message from qry execuction (select, insert, update, delete)
 			"data"    => $query_data, // data returned from "get_records" and "get_record"
 			"lastid"  => $lastid, // pk_id of inserted
+			"time"    => $timecheck,
 		);
 	}
 
