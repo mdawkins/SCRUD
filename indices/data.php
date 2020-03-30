@@ -11,7 +11,7 @@ if ( !empty($_GET["page"]) ) {
 	require_once ".serv.conf";
 	require_once "$funcroot/dbconnection.php";
 	// performance time
-	$timecheck[] = $eta + microtime(true);
+	$timecheck = [ "P1" => $eta + microtime(true) ];
 
 	// Get job (and id)
 	$job = $id = "";
@@ -41,7 +41,7 @@ if ( !empty($_GET["page"]) ) {
 			$job = "";
 		}
 		// performance time
-		$timecheck[] = $eta + microtime(true);
+		$timecheck = array_merge($timecheck, [ "P2" => $eta + microtime(true) ]);
 
 		// tableselect is a html select where its options are generated from
 		// a DB table query. It requieres a valid array pair bewtween selslist & colslist
@@ -69,6 +69,7 @@ if ( !empty($_GET["page"]) ) {
 					}
 					$sqlsel_rows = "SELECT ".$sel["selid"].", ".$sel["selname"]." FROM ".$sel["seltable"].$wherestring." ORDER BY ".$sel["selname"];
 					//echo $sqlsel_rows."<br>";
+					$timecheck = array_merge($timecheck, [ "P3-pre".$sel["selcol"] => $eta + microtime(true) ]);
 					$result = db_query($sqlsel_rows);
 					if ( db_num_rows($result) > 0) {
 						// output data of each row
@@ -82,6 +83,7 @@ if ( !empty($_GET["page"]) ) {
 							if ( $i != 0 ) { $name[0] = array_merge($name[0], $name[$i]); }
 							$i++;
 						}
+						$timecheck = array_merge($timecheck, [ "P3-list".$sel["selcol"] => $eta + microtime(true) ]);
 						$lists[$sel["selcol"]] = $name[0];
 					}
 					unset($wherestring);
@@ -91,6 +93,7 @@ if ( !empty($_GET["page"]) ) {
 					$name[0] = [ [ "key" => "selectparent", "value" => $sel["parselcol"], "title" => "Select ".$sel["partitle"]." first" ] ];
 					$lists[$sel["selcol"]] = $name[0];
 				}
+				$timecheck = array_merge($timecheck, [ "P3-".$sel["selcol"] => $eta + microtime(true), "sql-".$sel["selcol"] => $sqlsel_rows ]);
 			}
 		}
 
@@ -120,7 +123,7 @@ if ( !empty($_GET["page"]) ) {
 		}
 
 		// performance time
-		$timecheck[] = $eta + microtime(true);
+		$timecheck = array_merge($timecheck, [ "P4" => $eta + microtime(true) ]);
 
 		// Does input_type == dropedit?
 		// insert logic from labtests/spec700 & specs703actual
@@ -506,7 +509,7 @@ if ( !empty($_GET["page"]) ) {
 					echo '<option value="'.$row[$nestedid].'">'.$row[$nestedcolumn].'</option>';
 				}
 			} else {
-				echo '<option value="">'.$sqlstatement.' not available</option>'; // throw sql to option for debugging
+				echo '<option value="'.$sqlstatement.'">No results available</option>'; // throw sql to option for debugging
 			}
 		}
 		// End Job: ajax_select
@@ -514,7 +517,7 @@ if ( !empty($_GET["page"]) ) {
 		db_close($conn);
 	}
 	// performance time
-	$timecheck[] = $eta + microtime(true);
+	$timecheck = array_merge($timecheck, [ "P5" => $eta + microtime(true) ]);
 }
 if ( $job != "ajax_select" ) {	
 	// Prepare data from info in config file arrays

@@ -240,6 +240,7 @@ function addeditdel_record ( action ) {
 	$(document).on('click', '.function_' + action + ' a', function(e){
 		e.preventDefault();
 		if ( action == 'add' ) {
+			show_loading_message();
 			var job = 'page_lists';
 			id = "";
 			configpage = page;
@@ -289,9 +290,10 @@ function addeditdel_record ( action ) {
 				if ( action != 'delete' ) {
 	  				colsls = output.colsls;
 	  				data = output.data;
+					// some how the item id used to link to the child to the partent needs to be passed here
 					$(".lightbox_content").html(addedit_form ( colsls, output.lists, output.selslist ));
 
-					if ( action == 'add' ) {
+					if ( action == 'add' ) { // only if dt_table is maintable or the parent record, child records will have an ID
 						id, data = '';
 					} else if ( action == 'delete' ) {
 							return;
