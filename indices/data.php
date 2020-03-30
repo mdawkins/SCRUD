@@ -360,26 +360,27 @@ if ( !empty($_GET["page"]) ) {
 			// Add Record: Needs to be verified to work with Oracle
 			$sqlstatement = "INSERT INTO $table SET ";
 			foreach ( $colslist as $i => $col ) {
-				if ( isset($_GET[$col["column"]]) && empty($_GET[$col["column"]]) ) {
-					$sqlstatement .= $col["column"]." = NULL, ";
-				} elseif ( isset($_GET[$col["column"]]) ) {
-					$sqlstatement .= $col["column"]." = '".addslashes($_GET[$col["column"]])."', ";
-				}
+				// decide how to handle crosswalk first is it Parent/Child or Many 2 Many (needs to be handled still if just a 3rd joined table)
 				if ( $col["input_type"] == "crosswalk" ) {
-					$crosswalk = 1;
 					foreach ( $selslist as $k => $sel ) {
 						// if parselcol is empty or !isset bc crosswalk + parselcol can be used to left join sibling columns that are keyed to other tables
 						if ( $col["column"] == $sel["selcol"] && $sel["seltable"] != $table ) {
+							$crosswalk = 1;
 							$selid = $sel["selid"];
 							$wherekey = $sel["wherekey"];
 							$seltable = $sel["seltable"];
 							$getid = addslashes($_GET["id"]);
 						}
-						//else {
-						//	$selid = $sel["selid"];
-						//	$getid = addslashes($_GET["id"]);
-						//}
+						elseif ( $col["column"] == $sel["selcol"] && $sel["seltable"] == $table ) {
+							// add child column and id to the sql statement
+							$sqlstatement .= $sel["wherekey"]." = '".addslashes($_GET["id"])."', ";
+						}
 					}
+				}
+				if ( isset($_GET[$col["column"]]) && empty($_GET[$col["column"]]) ) {
+					$sqlstatement .= $col["column"]." = NULL, ";
+				} elseif ( isset($_GET[$col["column"]]) ) {
+					$sqlstatement .= $col["column"]." = '".addslashes($_GET[$col["column"]])."', ";
 				}
 			}
 			$sqlstatement = rtrim($sqlstatement, ', ');
