@@ -16,7 +16,11 @@ $(document).ready(function() {
 		if (output.result == 'success' && output.message == 'page_info') {
 			// assign individual variables to their values
 			for (let key in output.pginfo) {
-				var varname = key + ' = \"' + output.pginfo[key] + '\"';
+				if ( output.pginfo[key] == null ) {
+					var varname = key + ' = null';
+				} else {
+					var varname = key + ' = \"' + output.pginfo[key] + '\"';
+				}
 				eval(varname);
 			}
 			colsls = output.colsls;
@@ -39,6 +43,29 @@ $(document).ready(function() {
 			});
 		}
 
+		// set showdeletecolumn to yess if blank
+		var ltCol, rtCol;
+		ltCol = rtCol = 0;
+		if ( showdeletecolumn == null || showdeletecolumn != 'no' ) {
+			//showdeletecolumn = 'yes';
+			rtCol = 1;
+		}
+		if ( showidcolumn != null || showidcolumn == 'yes' ) {
+			ltCol++;
+			console.log(showidcolumn);
+		}
+		if ( showrownum != null || showrownum == 'yes' ) {
+			ltCol++;
+			console.log(showrownum);
+		}
+		colsls.forEach(function(col) {
+			if ( col["input_type"] === "drilldown" ) {
+				var issetdrilldown = 1;
+				//fixedColumns does not work well with drilldown tables
+				ltCol = rtCol = 0;
+			}
+		});
+
 		// On page load: datatable
 		var maintable = $('#table_records').DataTable({
 			"bStateSave": true, // Save the state of the page at reload
@@ -47,7 +74,7 @@ $(document).ready(function() {
 			"scrollCollapse": true, // Allows thead row to stay at top while scrolling
 			"orderCellsTop": true, // Only allow sorting from top thead row
 			"colReorder": {fixedColumnsRight: 1}, // Drap N Drop Columns
-			//"fixedColumns": {leftColumns: 0, rightColumns: 1}, // Fix Column in place ie Freeze View
+			"fixedColumns": {leftColumns: ltCol, rightColumns: rtCol}, // has problems with drilldown tables
 			"dom": 'rt<"bottom"pil><"clear">',
 			"ajax": {
 				"url": 'data.php?job=get_records',
@@ -144,12 +171,6 @@ $(document).ready(function() {
 		addeditdel_record( 'attach' );
 
 		//For each child table
-		for ( var i = 0; i < colsls.length; i++ ) {
-			if ( colsls[i]["input_type"] === "drilldown" ) {
-				var issetdrilldown = 1;
-				//console.log(colsls[i]["input_type"]);
-			}
-		}
 		if ( issetdrilldown === 1 ) {
 			drilldowntable( maintable );
 		}
