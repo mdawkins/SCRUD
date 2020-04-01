@@ -58,9 +58,10 @@ $(document).ready(function() {
 			ltCol++;
 			console.log(showrownum);
 		}
+		var issetdrilldown = 0;
 		colsls.forEach(function(col) {
 			if ( col["input_type"] === "drilldown" ) {
-				var issetdrilldown = 1;
+				issetdrilldown = 1;
 				//fixedColumns does not work well with drilldown tables
 				ltCol = rtCol = 0;
 			}
