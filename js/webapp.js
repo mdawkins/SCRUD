@@ -175,5 +175,9 @@ $(document).ready(function() {
 		if ( issetdrilldown === 1 ) {
 			drilldowntable( maintable );
 		}
+
+		// Moment JS Date format sorting
+		$.fn.dataTable.moment( 'MM/DD/YYYY' );
+		$.fn.dataTable.moment( 'MM-DD-YYYY' );
 	});
 });

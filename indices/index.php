@@ -31,6 +31,8 @@
 		<script charset="utf-8" src="//cdn.datatables.net/colreorder/1.5.2/js/dataTables.colReorder.min.js"></script>
 		<script charset="utf-8" src="//cdn.datatables.net/fixedcolumns/3.3.0/js/dataTables.fixedColumns.min.js"></script>
 		<script charset="utf-8" src="//cdn.datatables.net/fixedheader/3.1.6/js/dataTables.fixedHeader.min.js"></script>
+		<script charset="utf-8" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+		<script charset="utf-8" src="//cdn.datatables.net/plug-ins/1.10.20/sorting/datetime-moment.js"></script>
 <!--<script charset="utf-8" src="https://cdn.datatables.net/responsive/2.2.2/js/dataTables.responsive.min.js"></script> --!>
 <!--<script charset="utf-8" src="https://cdn.datatables.net/responsive/2.2.2/js/responsive.jqueryui.min.js"></script> --!>
 <!--<script charset="utf-8" src="https://cdnjs.cloudflare.com/ajax/libs/yadcf/0.9.3/jquery.dataTables.yadcf.min.js"></script> --!>
