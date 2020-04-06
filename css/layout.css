@@ -54,6 +54,7 @@ label {
   cursor: pointer;
 }
 input,
+textarea,
 button,
 select {
   background-color: transparent;
@@ -112,6 +113,15 @@ input[type="submit"]::-moz-focus-inner,
 input[type="reset"]::-moz-focus-inner {
   padding: 0 !important;
   border: 0 none !important;
+}
+
+/* Filter container ----------------------------------------------------------------------------- */
+#filter_container {
+  width: auto;
+  display: none;
+  height: 100px;
+  padding: 5px 5px 2px 5px;
+  margin: 0 auto 0 auto;
 }
 
 /* Page container ------------------------------------------------------------------------------- */
@@ -297,10 +307,15 @@ button.button:active {
   text-align: center;
 }
 
+table.filtertable,
 table.datatable {
   width: 100% !important;
   line-height: 1.4rem;
 }
+table.filtertable {
+  height: 100%;
+}
+table.filtertable td,
 table.datatable th,
 table.datatable td {
 //  background-color: #fff;
@@ -308,6 +323,7 @@ table.datatable td {
   border: 1px solid #999;
 }
 
+table.filtertable td,
 table.datatable thead th {
   background-color: #666;
   font-weight: bold;
@@ -365,15 +381,18 @@ table.datatable thead tbody th.functions, td.functions {
   padding: 2px 5px !important;
 }
 
+table.datatable thead .filter_button,
 table.datatable thead .topfunc_buttons {
   width: 70px;
   height: 30px;
   margin: 0 auto 0 auto;
 }
+table.datatable thead .filter_button li,
 table.datatable thead .topfunc_buttons li {
   float: left;
   padding: 0 2px;
 }
+table.datatable thead .filter_button a,
 table.datatable thead .topfunc_buttons a {
   width: 30px;
   height: 30px;
@@ -401,12 +420,24 @@ table.datatable thead .topfunc_buttons .function_attach a:before {
   font-size: 1.1rem;
   content: "\f0c6";
 }
+table.datatable thead .filter_button .function_srvfilter a:before {
+  font-size: 1.1rem;
+  content: "\f0b0";
+}
 table.datatable thead .topfunc_buttons a:hover,
 table.datatable thead .topfunc_buttons a:active,
 table.datatable thead .topfunc_buttons a:focus {
   background-color: #333;
 }
 table.datatable thead .topfunc_buttons span {
+  display: none;
+}
+table.datatable thead .filter_button a:hover,
+table.datatable thead .filter_button a:active,
+table.datatable thead .filter_button a:focus {
+  background-color: #333;
+}
+table.datatable thead .filter_button span {
   display: none;
 }
 

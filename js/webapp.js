@@ -158,6 +158,9 @@ $(document).ready(function() {
 			e.preventDefault();
 			maintable.colReorder.reset();
 		});
+		$('#filter').click(function() {
+			$('#filter_container').animate({height: 'toggle'});
+		});
 
 		// Add Record button & submit form
 		addeditdel_record( 'add' );

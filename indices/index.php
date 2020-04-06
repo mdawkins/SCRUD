@@ -47,13 +47,18 @@
 include_once "$approot/templates/topmenubar.php";
 ?>
 <!-- end of top menu bar --!>
-
+		<div id="filter_container">
+			<table class="filtertable" id="filter_records">
+				<tr>
+					<td>Here I am!</td>
+				</tr>
+			</table>
+		</div>
 		<div id="page_container">
 			<table class="datatable" id="table_records">
 				<tbody>
 				</tbody>
 			</table>
-
 		</div>
 
 		<div class="lightbox_bg"></div>
