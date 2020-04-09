@@ -149,9 +149,10 @@ function dt_header ( columnslist, tableid, showrownum, showdeletecolumn, id, pag
 		if ( tableid == "maintable" ) {
 			filterhtml += "\t\t\t\t<li id=\"filter\" class=\"function_srvfilter\"><a><span title=\"Filter\">Filter</span></a></li>\n\n";
 			headerhtml += "\t\t\t\t<li id=\"reset\" class=\"function_reordercols\"><a><span title=\"Reorder Columns\">Reorder</span></a></li>\n\n";
+			headerhtml += "\t\t\t\t<li id=\"add_record\" class=\"function_add\"><a " + dataid + " " + dataname + "><span title=\"Add Record\">Add</span></a></li>\n";
 		}
-		headerhtml += "\t\t\t\t<li id=\"add_record\" class=\"function_add\"><a " + dataid + " " + dataname + "><span title=\"Add Record\">Add</span></a></li>\n";
-		if ( tableid != "maintable" ) {
+		else if ( tableid != "maintable" ) {
+			headerhtml += "\t\t\t\t<li id=\"add_record\" class=\"function_add\"><a " + dataid + " " + dataname + "><span title=\"Add Record\">Add</span></a></li>\n";
 			headerhtml += "\t\t\t\t<li id=\"attach_record\" class=\"function_attach\"><a " + dataid + " " + dataname + "><span title=\"Attach Record\">Attach</span></a></li>\n\n";
 		}
 		headerhtml += "\t\t\t</ul></div>\n\t\t</th>\n";
