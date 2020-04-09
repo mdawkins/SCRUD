@@ -1,3 +1,29 @@
+function create_filtercols ( colslist ) {
+	var linepresent = 0;
+	var filterline = "[ ";
+	colslist.forEach(function(col) {
+		if ( typeof col["filtersrv"] !== "undefined" && col["filtersrv"] == "yes" ) {
+			if ( linepresent == 1 ) {
+				// add comma to end of object
+				filterline += ",";
+			}
+			var filtercol = '{ "column": "' + col["column"] + '", "title": "' + col["title"] + '", ';
+			if ( col["input_type"] == "tableselect" || col["input_type"] == "tableselect" ) {
+				// set input type to select mulitple
+				filtercol += '"input_type": "' + col["input_type"] + '", "multiple": "yes" }'; 
+			} else if ( col["input_type"] == "date" || col["input_type"] == "datetime" ) {
+				// set input type to two date pickers for a range
+				filtercol += '"input_type": "' + col["input_type"] + '", "range": "yes" }'; 
+			}
+			linepresent = 1;
+			filterline += filtercol;
+		} else {
+			// no columns to use for server side filtering
+		}
+	});
+	filterline += " ]";
+	return JSON.parse(filterline);
+}
 function filter_columns ( colslist, showrownum ) {
 	var linepresent, colnum = 0;
 	var filterline = "[ ";
@@ -141,6 +167,37 @@ function dt_header ( columnslist, tableid, showrownum, showdeletecolumn, id, pag
 }
 function format_header_id ( varheader, table_id ) {
 	return varheader.replace("##ID##", table_id);
+}
+function filter_form ( columnslist, lists, tableid ) {
+	var headerhtml = "<table class=\"datatable\" id=\"" + tableid + "\">\n<thead>\n\t<tr>\n";
+	var formhtml = "<tbody>\n\t<tr>\n";
+	formhtml += "<form class=\"form filter\" id=\"form_filter\" data-id=\"\" novalidate>\n";
+	columnslist.forEach(function(col) {
+		headerhtml += "\t\t<th>" + col["title"] + "</th>\n";
+		formhtml += "\t\t<td class=\"field_container\">\n";
+		if ( col["input_type"] == "select" || col["input_type"] == "tableselect" ) {
+			Object.keys(lists).forEach(function(list) {
+				if ( list == col["column"] ) {
+					formhtml += "\t\t<select class=\"text\" name=\"" + col["column"] + "\" id=\"" + col["column"] + "\"  multiple  >\n";
+					formhtml += "\t\t\t<option value=\"\">Select a " + col["title"] + "</option>\n";
+					//console.log( lists[list][0]["key"] );
+					for ( var i = 0; i < lists[list].length; i++ ) {
+						formhtml += "\t\t\t<option value=\"" + lists[list][i].key + "\" >" + lists[list][i].title + "</option>\n";
+					}
+					formhtml += "\t\t</select>\n";
+				}
+			});
+		} else if ( col["input_type"] == "date" || col["input_type"] == "datetime" ) {
+			// two date pickers
+		}
+		formhtml += "\t\t</td>\n";
+	});
+	headerhtml += "\t\t<th>&nbsp;</th>\n";
+	headerhtml += "\t</tr></thead>\n";
+	formhtml += "\t\t<td class=\"button_container\">\n\t\t<button type=\"submit\">##blank##</button>\n\t\t</td>\n</form>\n";
+	formhtml += "\t</tr></tbody>\n</table>\n";
+	//console.log( headerhtml + formhtml);
+	return headerhtml + formhtml;
 }
 function addedit_form ( columnslist, lists, selslist ) {
 	var formhtml = "<h2>##blank##</h2>\n";

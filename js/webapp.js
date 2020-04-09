@@ -159,7 +159,18 @@ $(document).ready(function() {
 			maintable.colReorder.reset();
 		});
 		$('#filter').click(function() {
+			// create a list of filter able columns
+			var filtercols = create_filtercols ( colsls );
 			$('#filter_container').animate({height: 'toggle'});
+			// calling page_lists here
+			var request = getdata_ajax( 'page_lists', {'page': page} );
+			request.done(function(output) {
+				if (output.result == 'success' && output.message == 'page_lists') {
+					lists = output.lists;
+					//var filtertds = filter_form ( filtercols, lists, 'noneed' );
+					$("#filter_container").html( '<div class=\"input_container\">' + filter_form ( filtercols, lists, 'noneed' ) + '</div>');
+				}
+			});
 		});
 
 		// Add Record button & submit form
