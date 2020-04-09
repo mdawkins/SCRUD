@@ -125,122 +125,141 @@ if ( !empty($_GET["page"]) ) {
 		// performance time
 		$timecheck = array_merge($timecheck, [ "P4" => $eta + microtime(true) ]);
 
-		// Does input_type == dropedit?
-		// insert logic from labtests/spec700 & specs703actual
-		// Attach child record to parent record in crosswalk table
-
 		// Execute job
 		if ( $job == "get_records" ) {
 
-			// table row header
+			// filter API for wheres or additional filtering
+			// any input type can be passed a variable to filter, but not all types can be filtered from the server side filter menu
+			if ( !empty($_GET["filter"]) ) {
+				// partner to use ;; splits filter pairs, :: splits keys from values
+				$filterpairs = explode(";;", addslashes($_GET["filter"]));
+
+				// this works like so: arrray_search "needle" inside array("haystack");
+				foreach ( $filterpairs as $i => $filterpair ) {
+					list($filtercolumn, $filtervalue) = explode("::", $filterpair);
+					$filterlist[$i] = [ "column" => $filtercolumn, "value" => $filtervalue ];
+				}
+				//print_r($filterlist);
+			}
+			// END filter API
+
 			// BUILD SQL STATMENT BASED ON CONFIG FILE ARRAYS FOR PAGE
-			// BN - Sniff db, then branch to MySQLLib php file, with this code
-			// or point it at OCI8 oraLib php file
-			// MD - The .serv.conf addresses which service (ie mysql/oracle) to use.
-			// Once the service variable is established, functions/dbconnection.php
-			// implements the appropriate DB function calls inside SCRUD's DB functions
-			// Eg. db_connect: implements either mysqli_connect or oci_connect depending on service
 			foreach ( $colslist as $i => $col ) {
 				// IF col input type is a tableselect OR input type is a crosswalk and selcol can be found in columns colslist
 				if ( ( $col["input_type"] == "tableselect" || $col["input_type"] == "crosswalk" ) && array_search($col["column"], array_column($selslist, "selcol")) !== null ) {
-					// AND selslist "selcol" == colslist "column"
-					// This basic array mapping
-					foreach ( $selslist as $k => $sel ) {
-						if ( $col["column"] == $sel["selcol"] ) {
-							$searchcol = $sel["selname"];
-							// don't join unless we need to only with crosswalk table not eq to childtable OR specify seljoin = yes
-							if ( ($col["input_type"] == "crosswalk" && $sel["seltable"] != $table) || $sel["seljoin"] == "yes" ) {
-								$ljointables .= "LEFT JOIN ".$sel["seltable"]." AS t$i ON ";
+					// SELCOL should == COLUMN
+					//echo "{SELCOLINDEX: $selcolindex, SELCOL: ".$selslist[$selcolindex]["selcol"].", COLUMN: ".$col["column"]."},<br>";
+
+					// this will be faster to access the selcol == column pair instead if looping thru the selslist array for each column array
+					$selcolindex = array_search($col["column"], array_column($selslist, "selcol"));
+					$selcol = $selslist[$selcolindex]["selcol"];
+					$selname = $selslist[$selcolindex]["selname"];
+					$selid = $selslist[$selcolindex]["selid"];
+					$seltable = $selslist[$selcolindex]["seltable"];
+					$seljoin = $selslist[$selcolindex]["seljoin"]; // seljoin == yes means LEFT JOIN seltable as t$i
+					$parselcol = $selslist[$selcolindex]["parselcol"];
+					$wherekey = $selslist[$selcolindex]["wherekey"];
+
+					// set default for table for addwheres
+					$filtertable = "t$i";
+
+					// don't join unless we need to only with crosswalk table not eq to childtable OR specify seljoin = yes
+					if ( ($col["input_type"] == "crosswalk" && $seltable != $table) || $seljoin == "yes" ) {
+						$ljointables .= "LEFT JOIN $seltable AS t$i ON ";
+					}
+
+					// if crosswalk
+					if ( $col["input_type"] == "crosswalk" ) {
+					   	if ( $seltable != $table ) {
+							$cwtable = "t$i";
+							// honestly this is backwards, the selid should = id
+							if ( empty($selname) ) {
+								$selname = "id";
 							}
-
-							if ( $col["input_type"] == "crosswalk" ) {
-							   	if ( $sel["seltable"] != $table ) {
-									$cwtable = "t$i";
-									// honestly this is backwards, the selid should = id
-									if ( empty($sel["selname"]) ) {
-										$sel["selname"] = "id";
-									}
-									if ( !empty($sel["parselcol"]) ) {
-										// left join to another table than the config file table
-										$partable = "t".array_search( $sel["parselcol"], array_column($colslist, "column") );
-									} else {
-										$partable = $table;
-									}
-									$ljointables .= $partable.".".$sel["selname"]." = t$i.".$sel["selid"]." ";
-								} else {
-									// else no field for crosswalk
-									$cwtable = $table;
-								}
-								if ( $_GET["dt_table"] != "maintable" && !empty($_GET["dt_table"]) ) {
-									$wheres .= "$cwtable.".$sel["wherekey"]." = $id AND"; 
-								} // else no wheres for crosswalk tables not used in child configs
-
-							} elseif ( $sel["seljoin"] == "yes" ) {
-								$fields .= "t$i.".$sel["selname"]." AS ".$col["column"].", ";
-								$ljointables .= $table.".".$col["column"]." = t$i.".$sel["selid"]." ";
-							// why use left joins when the data is the same on the datatable but this is used to create tableselects in the forms
-							// Default logic if col input type is tableselect
+							if ( !empty($parselcol) ) {
+								// left join to another table than the config file table
+								$filtertable = $partable = "t".array_search( $parselcol, array_column($colslist, "column") );
 							} else {
-								$fields .= "$table.".$col["column"].", ";
+								$partable = $table;
 							}
+							$ljointables .= "$partable.$selname = t$i.$selid ";
+						} else {
+							// else use the config file table for crosswalk and no fields
+							$cwtable = $table;
 						}
-					} 
-				// IF col input type is pivotjoin
-				// Eg labtests: testroster:
-				// See page config file for TODO integration of logic into data.php
+
+						// set wheres for crosswalk in child config
+						if ( $_GET["dt_table"] != "maintable" && !empty($_GET["dt_table"]) ) {
+							$wheres .= "$cwtable.$wherekey = $id AND"; 
+						} // else no wheres for crosswalk tables not used in child configs
+
+					// if tableselect
+					} elseif ( $seljoin == "yes" ) {
+						// seltable used if seljoin == yes
+						$fields .= "t$i.".$selname." AS ".$col["column"].", ";
+						// filtertable already set
+						$ljointables .= $table.".".$col["column"]." = t$i.$selid ";
+					// why use left joins when the data is the same on the datatable but this is used to create tableselects in the forms
+					// Default logic if col input type is tableselect
+					} elseif ( $seljoin != "yes" && !empty($parselcol) ) { // Not intended for nested/cascading columns, expected empty(partitle)
+						// use seltable from parent select column
+						$fields .= "$parenttable.".$col["column"].", ";
+						$filtertable = "t".array_search( $parselcol, array_column($colslist, "column") );
+						// no ljointables
+					} else {
+						$fields .= "$table.".$col["column"].", ";
+						// filtertable already set
+						// no ljointables
+					}
+				// IF pivotjoin
 				} elseif ( $col["input_type"] == "pivotjoin" ) {
 					$fields .= "`".$col["column"]."`, ";
 					$ljointables .= " LEFT JOIN (SELECT $pivkey, GROUP_CONCAT(DISTINCT(CASE WHEN $joinkey = '".$col["key"]."' THEN $keyname END) ORDER BY 1 SEPARATOR ', ') AS '".$col["column"]."' FROM $jointable WHERE $joinwherekey = $joinwhereval AND $joinkey = '".$col["key"]."' GROUP BY $pivkey) AS t".$i." ON $table.id=t$i.$pivkey";
-				// Eg casetracker: clientinfo
 				//  Show in viewtable but not in the addedit form
 				} elseif ( $col["input_type"] == "noform" ) {
 					$fields .= $col["colfunc"]." AS ".str_replace("%T%", "t$i", $col["column"]).", ";
-				// Eg fundsmap: historicalprojects
 				//  Format number to currency or if zero leave --
 				} elseif ( $col["input_type"] == "currency" ) {
 					$tablecolname = "$table.".$col["column"];
 					$fields .= "IF($tablecolname IS NULL OR $tablecolname = '0', '--', CONCAT('$',FORMAT($tablecolname, 2))) AS ".$col["column"].", ";
-				// Eg labtests: testqualification
 				//  Format YYYY/MM/DD to MM/DD/YYYY or leave --
 				} elseif ( $col["input_type"] == "date" ) {
 					$tablecolname = "$table.".$col["column"];
 					$fields .= "IF($tablecolname IS NULL OR $tablecolname = '0000-00-00', '--', DATE_FORMAT($tablecolname, '%m/%d/%Y')) AS ".$col["column"].", ";
-				// Eg casetracker: clientcases
 				//  Format YYYY/MM/DD 24H to MM/DD/YYYY 12a/p or leave --
 				} elseif ( $col["input_type"] == "datetime" ) {
 					$tablecolname = "$table.".$col["column"];
 					$fields .= "IF($tablecolname IS NULL OR $tablecolname = '0000-00-00 00:00:00', '--', DATE_FORMAT($tablecolname, '%m/%d/%Y %r')) AS ".$col["column"].", ";
-				// Eg casetracker: clientinfo
 				// Produce a Arrow button and display childrecords in a subtable
 				} elseif ( $col["input_type"] == "drilldown" || $col["input_type"] == "crosswalk" ) {
 					continue;
 				} else {
 					$fields .= "$table.".$col["column"].", ";
 				}
-				// add in ajax filters wheres here
-				// this was implemented in pajm and could be reused here if we do serverside filtering
-				// where the SQl statement is updated using ajax
-				if ( !empty($_POST[$col["column"]]) ) {
-					// BN - ex: In " t$i.id REGEXP ", what is "t" for ?
-					// MD - {t}ableN.id
-					${$col["column"]} = implode("','", $_POST[$col["column"]]);
-					if ( $col["filterbox"] == "checkbox" ) { 
-						if ( $col["multiple"] == "yes" && $col["input_type"] == "tableselect")
-							$addwheres .= " AND t$i.id REGEXP '".str_replace(",", "||", ${$col["column"]})."' ";
-						elseif ( $col["multiple"] == "yes" ) // just type select
-							$addwheres .= " AND ".$col["column"]." REGEXP '".str_replace(",", "||", ${$col["column"]})."' ";
-						else
-							$addwheres .= " AND ".$col["column"]." IN('".${$col["column"]}."') ";
-					} elseif ( $col["filterbox"] == "text" && !empty(${$col["column"]}) ) {
-						if ( $col["input_type"] == "tableselect" ) {
-							$addwheres .= " AND $searchcol LIKE '%".${$col["column"]}."%' ";
-						} elseif ( !empty($col["colfunc"]) ) { // concat val
-							$addwheres .= " AND ".$col["colfunc"]." LIKE '%".${$col["column"]}."%' ";
-						} else {
-							$addwheres .= " AND ".$col["column"]." LIKE '%".${$col["column"]}."%' ";
-						}
+
+				// filter API addwheres
+				// input types that can have serverside filtering: tableselect, select, date, datetime
+				// tableselect/select: select multiple
+				// date/datetime: between
+				$fpi = array_search($col["column"], array_column($filterlist, "column"));
+				if ( $fpi !== false && !empty($_GET["filter"]) ) {
+					//echo "$fpi : ".$filterlist[$fpi]["column"]." : ".$filterlist[$fpi]["value"]."<br>";
+
+					if ( $col["multiple"] == "yes" && $col["input_type"] == "tableselect" ) {
+						$addwheres .= " AND $filtertable.$selid REGEXP '".str_replace(",", "||", $filterlist[$fpi]["value"])."' ";
+					} elseif ( $col["multiple"] == "yes" && $col["input_type"] == "select" ) { // just type select
+						$addwheres .= " AND $table.".$col["column"]." REGEXP '".str_replace(",", "||", $filterlist[$fpi]["value"])."' ";
+					} elseif ( $col["input_type"] == "tableselect" ) {
+						$addwheres .= " AND $filtertable.$selname IN('".str_replace(",", "','", $filterlist[$fpi]["value"])."') ";
+					} elseif ( $col["input_type"] == "date" || $col["input_type"] == "datetime" ) {
+						$addwheres .= " AND $table.".$col["column"]." BETWEEN '".str_replace(",", "' AND '", $filterlist[$fpi]["value"])."') ";
+					} elseif ( !empty($col["colfunc"]) ) { // concat val
+						$addwheres .= " AND ".$col["colfunc"]." IN ('".str_replace(",", "','", $filterlist[$fpi]["value"])."') ";
+					} else { // to match input type select and anything else thrown at the API
+						$addwheres .= " AND $table.".$col["column"]." IN('".str_replace(",", "','", $filterlist[$fpi]["value"])."') ";
 					}
 				}
+				// end filter API addwheres
 			}
 
 			// clean up of sql variables
