@@ -28,10 +28,7 @@ h1, h2 {
 
 a {
   cursor: pointer;
-  -webkit-transition: all 0.2s ease 0s;
-  -moz-transition:    all 0.2s ease 0s;
-  -o-transition:      all 0.2s ease 0s;
-  transition:         all 0.2s ease 0s;
+  transition: all 0.2s ease 0s;
 }
 
 ul {
@@ -67,13 +64,7 @@ select {
   cursor: pointer;
 }
 button {
-  -webkit-transition: all 0.2s ease 0s;
-  -moz-transition:    all 0.2s ease 0s;
-  -o-transition:      all 0.2s ease 0s;
-  transition:         all 0.2s ease 0s;
-}
-select {
-//  -webkit-appearance: none;
+  transition: all 0.2s ease 0s;
 }
 
 input[type=text],
@@ -119,7 +110,7 @@ input[type="reset"]::-moz-focus-inner {
 #filter_container {
   width: auto;
   display: none;
-  height: 100px;
+  height: 125px;
   padding: 5px 5px 2px 5px;
   margin: 0 auto 0 auto;
 }
@@ -147,9 +138,7 @@ button.button {
   text-transform: uppercase;
   color: #fff;
   padding: 0 15px 0 15px;
-  -webkit-border-radius: 6px;
-  -moz-border-radius:    6px;
-  border-radius:         6px;
+  border-radius: 6px;
 //  margin: 0 0 5px 0;
 }
 button.button:hover,
@@ -202,9 +191,7 @@ button.button:active {
   color: #666;
   padding: 0 7px 0 7px;
   border: 1px solid #999;
-  -webkit-border-radius: 6px;
-  -moz-border-radius:    6px;
-  border-radius:         6px;
+  border-radius: 6px;
   margin: 0;
 }
 .dataTables_length:after {
@@ -222,12 +209,8 @@ button.button:active {
   color: #fff;
   content: '\f107';
   pointer-events: none;
-  -webkit-border-top-right-radius:    6px;
-  -webkit-border-bottom-right-radius: 6px;
-  -moz-border-radius-topright:        6px;
-  -moz-border-radius-bottomright:     6px;
-  border-top-right-radius:            6px;
-  border-bottom-right-radius:         6px;
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
 }
 .dataTables_length select::-ms-expand {
   display: none;
@@ -251,9 +234,7 @@ button.button:active {
   color: #666;
   padding: 0 0 0 10px;
   border: 1px solid #999;
-  -webkit-border-radius: 6px;
-  -moz-border-radius:    6px;
-  border-radius:         6px;
+  border-radius: 6px;
   margin: 0 0 0 10px;
 }
 .dataTables_filter input:focus {
@@ -274,9 +255,7 @@ button.button:active {
   line-height: 29px;
   text-align: center;
   color: #fff;
-  -webkit-border-radius: 6px;
-  -moz-border-radius:    6px;
-  border-radius:         6px;
+  border-radius: 6px;
   margin: 0 10px 0 0;
 }
 .dataTables_paginate a.current,
@@ -307,15 +286,19 @@ button.button:active {
   text-align: center;
 }
 
-table.filtertable,
+#filtertable table,
 table.datatable {
   width: 100% !important;
   line-height: 1.4rem;
+  background-color: #fff;
 }
-table.filtertable {
+#filtertable table {
   height: 100%;
 }
-table.filtertable td,
+#filtertable tbody tr:hover {
+  background-color: #fff;
+}
+#filtertable table,
 table.datatable th,
 table.datatable td {
 //  background-color: #fff;
@@ -323,7 +306,7 @@ table.datatable td {
   border: 1px solid #999;
 }
 
-table.filtertable td,
+#filtertable table td,
 table.datatable thead th {
   background-color: #666;
   font-weight: bold;
@@ -403,9 +386,7 @@ table.datatable thead .topfunc_buttons a {
   line-height: 29px;
   text-align: center;
   color: #fff;
-  -webkit-border-radius: 6px;
-  -moz-border-radius:    6px;
-  border-radius:         6px;
+  border-radius: 6px;
 }
 table.datatable thead .topfunc_buttons .function_reordercols a:before {
   font-size: 1.1rem;
@@ -460,9 +441,7 @@ table.datatable tbody td.functions .function_buttons a {
   line-height: 29px;
   text-align: center;
   color: #fff;
-  -webkit-border-radius: 6px;
-  -moz-border-radius:    6px;
-  border-radius:         6px;
+  border-radius: 6px;
 }
 table.datatable tbody td.functions .function_buttons .function_edit a:before {
   font-weight: 400;
@@ -520,7 +499,6 @@ table.datatable thead th.filter_content {
   margin: 0 3px;
   vertical-align: top;
 }
-/*.filter_content .select2 .select2-container .select2-container--default .select2-search__field .select2-selection .select2-selection--multiple { */
 .select2-container .select2-selection--multiple {
   max-height: 32px;
   min-height: 2px;
@@ -568,12 +546,8 @@ table.datatable thead th.filter_content {
   overflow-y: scroll;
   overflow-x: auto;
   padding: 5px 0 5px 0;
-   -webkit-box-sizing: border-box;
-  -moz-box-sizing:     border-box;
-  box-sizing:          border-box;
-  -webkit-border-radius: 6px;
-  -moz-border-radius:    6px;
-  border-radius:         6px;
+  box-sizing: border-box;
+  border-radius: 6px;
 }
 
 .lightbox_close {
@@ -649,18 +623,15 @@ table.datatable thead th.filter_content {
   color: #333;
   padding: 5px 0 6px 10px;
   border: 1px solid #f70;
-  -webkit-box-sizing: border-box;
-  -moz-box-sizing:    border-box;
-  box-sizing:         border-box;
-  -webkit-border-radius: 6px;
-  -moz-border-radius:    6px;
-  border-radius:         6px;
+  box-sizing: border-box;
+  border-radius: 6px;
   margin: 0 0 5px 0;
 }
 .lightbox_content .input_container .field_container label.error.valid {
   display: none !important;
 }
-.lightbox_content .input_container .field_container select[multiple] {
+/*.lightbox_content .input_container .field_container select[multiple] {*/
+.input_container .field_container select[multiple] {
   height: 90px;
 }
 .lightbox_content .input_container .field_container input, select, textarea {
@@ -671,12 +642,8 @@ table.datatable thead th.filter_content {
   color: #666;
   padding: 0 0 0 10px;
   border: 1px solid #999;
-  -webkit-box-sizing: border-box;
-  -moz-box-sizing:    border-box;
-  box-sizing:         border-box;
-  -webkit-border-radius: 6px;
-  -moz-border-radius:    6px;
-  border-radius:         6px;
+  box-sizing: border-box;
+  border-radius: 6px;
 }
 .lightbox_content .input_container .field_container input:focus {
   background-color: #ffd;
@@ -708,13 +675,17 @@ table.datatable thead th.filter_content {
   color: #090;
 }
 
-.lightbox_content .button_container {
+.button_container {
   width: auto;
   height: 30px;
   text-align: right;
 //  padding: 5px 0 10px 0;
 }
-.lightbox_content .button_container button {
+#filtertable .button_container {
+  width: 100px;
+  text-align: center;
+}
+.button_container button {
   height: 30px;
   display: inline-block;
   background-color: #999;
@@ -722,11 +693,9 @@ table.datatable thead th.filter_content {
   text-transform: uppercase;
   color: #fff;
   padding: 0 15px 0 15px;
-  -webkit-border-radius: 6px;
-  -moz-border-radius:    6px;
-  border-radius:         6px;
+  border-radius: 6px;
 }
-.lightbox_content .button_container button:hover {
+.button_container button:hover {
   background-color: #333;
   color: #fff;
 }
@@ -772,9 +741,7 @@ table.datatable thead th.filter_content {
   line-height: 20px;
   text-align: center;
   color: #fff;
-  -webkit-border-radius: 20px;
-  -moz-border-radius:    20px;
-  border-radius:         20px;
+  border-radius: 20px;
 }
 #message.success  p:before,
 #noscript.success p:before {
@@ -815,12 +782,8 @@ table.datatable thead th.filter_content {
   line-height: 1.4rem;
   color: #666;
   padding: 165px 0 0 0;
-   -webkit-box-sizing: border-box;
-  -moz-box-sizing:     border-box;
-  box-sizing:          border-box;
-  -webkit-border-radius: 6px;
-  -moz-border-radius:    6px;
-  border-radius:         6px;
+  box-sizing: border-box;
+  border-radius: 6px;
   margin: 0 auto 0 auto;
 }
 #loading_container4:before {
@@ -835,29 +798,28 @@ table.datatable thead th.filter_content {
   text-align: center;
   color: #f70;
   content: '\f013';
-  -webkit-animation: spin 2s infinite linear;
-  animation:         spin 2s infinite linear;
+  animation: spin 2s infinite linear;
 }
 
 @-webkit-keyframes spin {
   0% {
     -webkit-transform: rotate(0deg);
-    transform:         rotate(0deg);
+    transform: rotate(0deg);
   }
   100% {
     -webkit-transform: rotate(359deg);
-    transform:         rotate(359deg);
+    transform: rotate(359deg);
   }
 }
 
 @keyframes spin {
   0% {
     -webkit-transform: rotate(0deg);
-    transform:         rotate(0deg);
+    transform: rotate(0deg);
   }
   100% {
     -webkit-transform: rotate(359deg);
-    transform:         rotate(359deg);
+    transform: rotate(359deg);
   }
 }
 
