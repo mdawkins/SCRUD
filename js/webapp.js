@@ -168,7 +168,7 @@ $(document).ready(function() {
 				if (output.result == 'success' && output.message == 'page_lists') {
 					lists = output.lists;
 					//var filtertds = filter_form ( filtercols, lists, 'noneed' );
-					$("#filter_container").html( '<div class=\"input_container\">' + filter_form ( filtercols, lists, 'noneed' ) + '</div>');
+					$("#filter_container").html( filter_form ( filtercols, lists, 'filtertable' ) );
 				}
 			});
 		});

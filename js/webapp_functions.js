@@ -170,7 +170,7 @@ function format_header_id ( varheader, table_id ) {
 	return varheader.replace("##ID##", table_id);
 }
 function filter_form ( columnslist, lists, tableid ) {
-	var headerhtml = "<table class=\"datatable\" id=\"" + tableid + "\">\n<thead>\n\t<tr>\n";
+	var headerhtml = "<div class=\"input_container\">\n<table class=\"datatable\" id=\"" + tableid + "\">\n<thead>\n\t<tr>\n";
 	var formhtml = "<tbody>\n\t<tr>\n";
 	formhtml += "<form class=\"form filter\" id=\"form_filter\" data-id=\"\" novalidate>\n";
 	columnslist.forEach(function(col) {
@@ -195,8 +195,8 @@ function filter_form ( columnslist, lists, tableid ) {
 	});
 	headerhtml += "\t\t<th>&nbsp;</th>\n";
 	headerhtml += "\t</tr></thead>\n";
-	formhtml += "\t\t<td class=\"button_container\">\n\t\t<button type=\"submit\">##blank##</button>\n\t\t</td>\n</form>\n";
-	formhtml += "\t</tr></tbody>\n</table>\n";
+	formhtml += "\t\t<td class=\"button_container\">\n\t\t<button type=\"submit\">Filter</button>\n\t\t</td>\n</form>\n";
+	formhtml += "\t</tr></tbody>\n</table>\n</div>\n";
 	//console.log( headerhtml + formhtml);
 	return headerhtml + formhtml;
 }
