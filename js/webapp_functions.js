@@ -56,8 +56,14 @@ function cleanserial_mulsel( formdata, colslists) {
 		if ( col["multiple"] == "yes" ) {
 			var colrplstr = '&' + col["column"] + '='; 
 			var re = new RegExp( colrplstr, 'g');
+			// add &amp; to the front of the string to match possible first column
+			formdata = '&' + formdata;
 			// the first replace changes the first match to a placeholder, the second replace matches all the rest, and the third changes back the placeholder to the original value
 			formdata = formdata.replace(colrplstr, '##::##').replace(re, ';').replace('##::##', colrplstr);
+			// remove possible empty select "=;"
+			formdata = formdata.replace(/=;/g, '=');
+			//remove added &amp; at the front
+			formdata = formdata.substring(1);
 			//console.log( formdata );
 		}
 	});;
