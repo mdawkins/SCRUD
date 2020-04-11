@@ -290,13 +290,13 @@ button.button:active {
 table.datatable {
   width: 100% !important;
   line-height: 1.4rem;
-  background-color: #fff;
+  background-color: #666;
 }
 #filtertable table {
   height: 100%;
 }
 #filtertable tbody tr:hover {
-  background-color: #fff;
+  background-color: #666;
 }
 #filtertable table,
 table.datatable th,

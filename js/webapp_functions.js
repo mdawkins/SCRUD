@@ -147,7 +147,7 @@ function dt_header ( columnslist, tableid, showrownum, showdeletecolumn, id, pag
 		filterhtml += "\t\t<th>\n\t\t\t<div class=\"filter_button\"><ul>\n";
 		headerhtml += "\t\t<th>\n\t\t\t<div class=\"topfunc_buttons\"><ul>\n";
 		if ( tableid == "maintable" ) {
-			filterhtml += "\t\t\t\t<li id=\"filter\" class=\"function_srvfilter\"><a><span title=\"Filter\">Filter</span></a></li>\n\n";
+			filterhtml += "\t\t\t\t<li id=\"filter_menu\" class=\"function_srvfilter\"><a><span title=\"Filter\">Filter</span></a></li>\n\n";
 			headerhtml += "\t\t\t\t<li id=\"reset\" class=\"function_reordercols\"><a><span title=\"Reorder Columns\">Reorder</span></a></li>\n\n";
 			headerhtml += "\t\t\t\t<li id=\"add_record\" class=\"function_add\"><a " + dataid + " " + dataname + "><span title=\"Add Record\">Add</span></a></li>\n";
 		}
@@ -170,9 +170,8 @@ function format_header_id ( varheader, table_id ) {
 	return varheader.replace("##ID##", table_id);
 }
 function filter_form ( columnslist, lists, tableid ) {
-	var headerhtml = "<div class=\"input_container\">\n<table class=\"datatable\" id=\"" + tableid + "\">\n<thead>\n\t<tr>\n";
+	var headerhtml = "<div class=\"input_container\">\n<form class=\"form filter\" id=\"form_filter\">\n<table class=\"datatable\" id=\"" + tableid + "\">\n<thead>\n\t<tr>\n";
 	var formhtml = "<tbody>\n\t<tr>\n";
-	formhtml += "<form class=\"form filter\" id=\"form_filter\" data-id=\"\" novalidate>\n";
 	columnslist.forEach(function(col) {
 		headerhtml += "\t\t<th>" + col["title"] + "</th>\n";
 		formhtml += "\t\t<td class=\"field_container\">\n";
@@ -195,10 +194,11 @@ function filter_form ( columnslist, lists, tableid ) {
 	});
 	headerhtml += "\t\t<th>&nbsp;</th>\n";
 	headerhtml += "\t</tr></thead>\n";
-	formhtml += "\t\t<td class=\"button_container\">\n\t\t<button type=\"submit\">Filter</button>\n\t\t</td>\n</form>\n";
-	formhtml += "\t</tr></tbody>\n</table>\n</div>\n";
+	formhtml += "\t\t<td class=\"button_container\">\n\t\t<button type=\"submit\">Filter</button>\n\t\t</td>\n";
+	formhtml += "\t</tr></tbody>\n</table>\n</form>\n</div>\n";
 	//console.log( headerhtml + formhtml);
 	return headerhtml + formhtml;
+
 }
 function addedit_form ( columnslist, lists, selslist ) {
 	var formhtml = "<h2>##blank##</h2>\n";
@@ -351,7 +351,7 @@ function addeditdel_record ( action ) {
 	  				colsls = output.colsls;
 	  				data = output.data;
 					// some how the item id used to link to the child to the partent needs to be passed here
-					$(".lightbox_content").html(addedit_form ( colsls, output.lists, output.selslist ));
+					$(".lightbox_content").html( addedit_form( colsls, output.lists, output.selslist ) );
 
 					if ( action == 'add' ) { // only if dt_table is maintable or the parent record, child records will have an ID
 						id, data = '';
