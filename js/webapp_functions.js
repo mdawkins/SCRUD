@@ -602,3 +602,193 @@ function drilldowntable ( parenttable ) {
 		tablecount++;
 	});
 }
+function filter_menu ( page, tableid, columnslist, rowfmt, showidcolumn, showrownum, showdeletecolumn ) {
+	// create a list of filterable columns
+	var filtercols = create_filtercols( columnslist );
+	//console.log ( filtercols );
+
+	$(document).on('click', '#filter_menu', function(e){
+		e.preventDefault();
+
+		// expand or collapse menu area
+		$('#filter_container').animate({height: 'toggle'});
+
+		// calling page_lists here
+		var request = getdata_ajax( 'page_lists', {'page': page} );
+		request.done(function(output) {
+			if (output.result == 'success' && output.message == 'page_lists') {
+				lists = output.lists;
+				$("#filter_container").html( filter_form( filtercols, lists, 'filtertable' ) );
+				filtercols.forEach(function(col) {
+					var columnclass = "#form_filter #" + col["column"];
+					if ( col["input_type"] == "select" || col["input_type"] == "tableselect" ) {
+						$(columnclass).val() || [];
+					}
+				});
+			}
+		});
+
+	});
+
+	// server side filter submit button
+	$(document).on('submit', '#form_filter.filter', function(e){
+		e.preventDefault();
+
+		var filterform = $('#form_filter');
+		filterform.validate();
+		if ( filterform.valid() == true ) {
+			var form_data = $('#form_filter').serialize();
+			//console.log( form_data );
+			form_data = cleanserial_mulsel( form_data, filtercols );
+			// prepare for filter API '::' splits key/value; ',' split multiple values; ';;' splits pairs
+			form_data = form_data.replace(/=/g, '::').replace(/;/g, ',').replace(/&/g, ';;');
+			console.log( form_data );
+			show_loading_message();
+			var dt_table = 'table_records';
+
+			// Clear and Destroy previously initialized DataTables
+			$("#" + dt_table).DataTable().clear().destroy();
+
+			// load maintable with filterapi = form_data
+			load_maintable( page, dt_table, columnslist, rowfmt, showidcolumn, showrownum, showdeletecolumn, form_data );
+
+			hide_loading_message();
+		}
+	});
+
+}
+function load_maintable ( page, tableid, columnslist, rowfmt, showidcolumn, showrownum, showdeletecolumn, filterapi ) {
+	// variables ( page, tableID, rowfmt, colsls, showrownum, showdeletecolumn, showfilterbutton )
+	// if filterapi is not empty, null, etc -> showfilterbutton = yes
+	var showfilterbutton;
+	if ( filterapi != undefined || filterapi != "" ) {
+		showfilterbutton = 'yes';
+	}
+
+	// Populate maintable header
+	$("#" + tableid).html( dt_header( columnslist, 'maintable', showrownum, showdeletecolumn ) ); //add showfilterbutton
+
+	// Set CSS for rowformat
+	if ( rowfmt != null ) {
+		$("head").append( rowformat( rowfmt, '#fff', '#ddd', '#ffd' ) );
+		// calling page_lists here
+		var request = getdata_ajax( 'page_lists', {'page': page} );
+		request.done(function(output) {
+			if (output.result == 'success' && output.message == 'page_lists') {
+				lists = output.lists;
+			}
+		});
+	}
+
+	// set showdeletecolumn to yess if blank
+	var ltCol, rtCol;
+	ltCol = rtCol = 0;
+	if ( showdeletecolumn == null || showdeletecolumn != 'no' ) {
+		//showdeletecolumn = 'yes';
+		rtCol = 1;
+	}
+	if ( showidcolumn != null || showidcolumn == 'yes' ) {
+		ltCol++;
+		console.log(showidcolumn);
+	}
+	if ( showrownum != null || showrownum == 'yes' ) {
+		ltCol++;
+		console.log(showrownum);
+	}
+	var issetdrilldown = 0;
+	columnslist.forEach(function(col) {
+		if ( col["input_type"] === "drilldown" ) {
+			issetdrilldown = 1;
+			//fixedColumns does not work well with drilldown tables
+			ltCol = rtCol = 0;
+		}
+	});
+
+	// On page load: datatable
+	var maintable = $('#' + tableid).DataTable({
+		"bStateSave": true, // Save the state of the page at reload
+		"scrollX": true, // Horizontal Scroll in window
+		"scrollY": "80vh", // Vertical Height (72) in window
+		"scrollCollapse": true, // Allows thead row to stay at top while scrolling
+		"orderCellsTop": true, // Only allow sorting from top thead row
+		"colReorder": {fixedColumnsRight: 1}, // Drap N Drop Columns
+		"fixedColumns": {leftColumns: ltCol, rightColumns: rtCol}, // has problems with drilldown tables
+		"dom": 'rt<"bottom"pil><"clear">',
+		"ajax": {
+			"url": 'data.php?job=get_records',
+			"cache": false,
+			"data": {'page': page, 'dt_table': 'maintable', 'filter': filterapi},
+			"dataType": 'json',
+			"contentType": 'application/json; charset=utf-8',
+			"type": 'get'
+		},
+		"createdRow": function( row, data ) {
+			if ( rowfmt !== null ) {
+				rwfmt = rw_fmt( lists, rowfmt );
+				let i = 0;
+				Object.keys(rwfmt).forEach(function(rowcol) {
+					let rwln = rwfmt[rowcol];
+					let colln = Object.keys(rwfmt)[i];
+					Object.keys(rwfmt[rowcol]).forEach(function(rfm) {
+						if ( data[colln] == rfm ) { $(row).addClass('color' + rwln[rfm] ); }
+					});
+					i++;
+				});
+			}
+		},
+		"columns": json_dtcolumns( columnslist, showrownum, showdeletecolumn ),
+		"order": function( ) { if ( showrownum == "yes" ) { return "[[ 1, 'asc' ]]"; } },
+		"aoColumnDefs": [ { "bSortable": false, "aTargets": [-1] } ],
+		"lengthMenu": [[50, -1], [50, "All"]],
+		"oLanguage": {
+			"oPaginate": { "sFirst": " ", "sPrevious": " ", "sNext": " ", "sLast": " ", },
+			"sLengthMenu": "Records per page: _MENU_",
+			"sInfo": "Displaying _START_ to _END_ / _TOTAL_ Total",
+			"sInfoFiltered": "(filtered from _MAX_ total records)"
+		}
+	});
+	yadcf.init(maintable, filter_columns( columnslist, showrownum ),
+		{ filters_tr_index: 1, cumulative_filtering: true }
+	);
+	if ( showrownum == "yes" ) {
+		maintable.on( 'order.dt search.dt', function() {
+			maintable.column(0, {search:'applied', order:'applied'}).nodes().each( function(cell, i) {
+				cell.innerHTML = i+1;
+				maintable.cell(cell).invalidate('dom');
+			});
+		}).draw();
+	}
+
+	// On page load: form validation
+	jQuery.validator.setDefaults({
+		success: 'valid',
+		rules: {
+			fiscal_year: { required: true, min: 2000, max: 2025 }
+		},
+		errorPlacement: function(error, element) {
+			error.insertBefore(element);
+		},
+		highlight: function(element) {
+			$(element).parent('.field_container').removeClass('valid').addClass('error');
+		},
+		unhighlight: function(element) {
+			$(element).parent('.field_container').addClass('valid').removeClass('error');
+		}
+	});
+
+	// Reset Column Order
+	$('#reset').click(function(e) {
+		e.preventDefault();
+		maintable.colReorder.reset();
+	});
+
+	//For each child table
+	if ( issetdrilldown === 1 ) {
+		drilldowntable( maintable );
+	}
+
+	// Moment JS Date format sorting
+	$.fn.dataTable.moment( 'MM/DD/YYYY' );
+	$.fn.dataTable.moment( 'MM-DD-YYYY' );
+
+}
