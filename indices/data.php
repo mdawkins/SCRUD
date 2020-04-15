@@ -142,7 +142,9 @@ if ( !empty($_GET["page"]) ) {
 				// this works like so: arrray_search "needle" inside array("haystack");
 				foreach ( $filterpairs as $i => $filterpair ) {
 					list($filtercolumn, $filtervalue) = explode("::", $filterpair);
-					$filterlist[$i] = [ "column" => $filtercolumn, "value" => $filtervalue ];
+					if ( !empty($filtervalue) ) {
+						$filterlist[$i] = [ "column" => $filtercolumn, "value" => $filtervalue ];
+					}
 				}
 				//print_r($filterlist);
 			}
@@ -247,7 +249,7 @@ if ( !empty($_GET["page"]) ) {
 				// tableselect/select: select multiple
 				// date/datetime: between
 				$fpi = array_search($col["column"], array_column($filterlist, "column"));
-				if ( $fpi !== false && !empty($_GET["filter"]) ) {
+				if ( $fpi !== false && !empty($_GET["filter"]) && !empty($filterlist) ) {
 					//echo "$fpi : ".$filterlist[$fpi]["column"]." : ".$filterlist[$fpi]["value"]."<br>";
 					if ( $col["multiple"] == "yes" && $col["input_type"] == "tableselect" ) {
 						$addwheres .= " AND $filtertable.$selid REGEXP '".str_replace(",", "||", $filterlist[$fpi]["value"])."' ";
