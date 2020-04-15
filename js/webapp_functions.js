@@ -148,6 +148,7 @@ function dt_footer ( columnslist, tableid, showrownum, showdeletecolumn, page ) 
 }
 function dt_header ( columnslist, tableid, showrownum, showdeletecolumn, id, page ) {
 	var showfilter = "no";
+	var showfiltermenu = "no";
 	var headerhtml = "<table class=\"datatable\" id=\"" + tableid + "\">\n<thead>\n\t<tr>\n";
 	var filterhtml = "\t<tr>\n";
 	if ( showrownum == "yes" && tableid == "maintable" ) {
@@ -161,7 +162,8 @@ function dt_header ( columnslist, tableid, showrownum, showdeletecolumn, id, pag
 		var dataname = "data-name=\"" + page + "\"";
 	} else { var dataname = ""; }
 	columnslist.forEach(function(col) {
-		if ( col["filterbox"] != "" ) { showfilter = "yes"; }
+		if ( col["filterbox"] != "" && col["filterbox"] !== undefined ) { showfilter = "yes"; }
+		if ( col["filtersrv"] != "" && col["filtersrv"] !== undefined ) { showfiltermenu = "yes"; }
 		if ( col["input_type"] != "crosswalk" ) {
 			headerhtml += "\t\t<th>" + col["title"] + "</th>\n";
 			filterhtml += "\t\t<th class=\"filter_content\"></th>\n";
@@ -171,7 +173,9 @@ function dt_header ( columnslist, tableid, showrownum, showdeletecolumn, id, pag
 		filterhtml += "\t\t<th>\n\t\t\t<div class=\"filter_button\"><ul>\n";
 		headerhtml += "\t\t<th>\n\t\t\t<div class=\"topfunc_buttons\"><ul>\n";
 		if ( tableid == "maintable" ) {
-			filterhtml += "\t\t\t\t<li id=\"filter_menu\" class=\"function_srvfilter\"><a><span title=\"Filter\">Filter</span></a></li>\n\n";
+			if ( showfiltermenu == "yes" ) {
+				filterhtml += "\t\t\t\t<li id=\"filter_menu\" class=\"function_srvfilter\"><a><span title=\"Filter\">Filter</span></a></li>\n\n";
+			}
 			headerhtml += "\t\t\t\t<li id=\"reset\" class=\"function_reordercols\"><a><span title=\"Reorder Columns\">Reorder</span></a></li>\n\n";
 			headerhtml += "\t\t\t\t<li id=\"add_record\" class=\"function_add\"><a " + dataid + " " + dataname + "><span title=\"Add Record\">Add</span></a></li>\n";
 		}
@@ -182,7 +186,7 @@ function dt_header ( columnslist, tableid, showrownum, showdeletecolumn, id, pag
 		headerhtml += "\t\t\t</ul></div>\n\t\t</th>\n";
 		filterhtml += "\t\t\t</ul></div>\n\t\t</th>\n";
 	}
-	if ( tableid == "maintable" ) {
+	if ( tableid == "maintable" && showfilter == "yes" ) {
 		headerhtml += "\t</tr>\n";
 		headerhtml += filterhtml;
 	}
