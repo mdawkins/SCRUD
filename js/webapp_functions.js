@@ -128,6 +128,24 @@ function rw_fmt ( lists, rowfmt ) {
 	});
 	return coltype;
 }
+function dt_footer ( columnslist, tableid, showrownum, showdeletecolumn, page ) {
+	var footerhtml = "<table class=\"datatable\" id=\"" + tableid + "\">\n<tfoot>\n\t<tr>\n";
+	if ( showrownum == "yes" && tableid == "maintable" ) {
+		footerhtml += "\t\t<th></th>\n";
+	}
+	// Create th for each column, except crosswalk
+	columnslist.forEach(function(col) {
+		if ( col["input_type"] != "crosswalk" ) {
+			footerhtml += "\t\t<th></th>\n";
+		}
+	});
+	if ( showdeletecolumn != "no" ) {
+		footerhtml += "\t\t<th></th>\n";
+	}
+	footerhtml += "\t</tr></tfoot>\n</table>\n";
+	//console.log(footerhtml);
+	return footerhtml;
+}
 function dt_header ( columnslist, tableid, showrownum, showdeletecolumn, id, page ) {
 	var showfilter = "no";
 	var headerhtml = "<table class=\"datatable\" id=\"" + tableid + "\">\n<thead>\n\t<tr>\n";
