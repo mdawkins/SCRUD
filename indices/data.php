@@ -5,7 +5,7 @@ if ( !empty($_GET["page"]) ) {
 	if( isset($colorderby) ) {
 		$colorderby = "ORDER BY ".str_replace("::", " ", $colorderby);
 	}
-	$pageinfo = [ "pagetitle" => $pagetitle, "table" => $table, "showidcolumn" => $showidcolumn, "showrownum" => $showrownum, "showdeletecolumn" => $showdeletecolumn, "colorderby" => $colorderby, "rowlimit" => $rowlimit ];
+	$pageinfo = [ "pagetitle" => $pagetitle, "table" => $table, "showidcolumn" => $showidcolumn, "showrownum" => $showrownum, "showdeletecolumn" => $showdeletecolumn, "colorderby" => $colorderby, "rowlimit" => $rowlimit, "waittoload" => $waittoload ];
 
 	// Database details
 	require_once ".serv.conf";
@@ -131,6 +131,11 @@ if ( !empty($_GET["page"]) ) {
 			// filter API for wheres or additional filtering
 			// any input type can be passed a variable to filter, but not all types can be filtered from the server side filter menu
 			if ( !empty($_GET["filter"]) ) {
+
+				if ( $_GET["filter"] == "0::0" ) {
+					// this is to not run the query
+					$wheres = "0::0";
+				}
 				// partner to use ;; splits filter pairs, :: splits keys from values
 				$filterpairs = explode(";;", addslashes($_GET["filter"]));
 
@@ -244,13 +249,12 @@ if ( !empty($_GET["page"]) ) {
 				$fpi = array_search($col["column"], array_column($filterlist, "column"));
 				if ( $fpi !== false && !empty($_GET["filter"]) ) {
 					//echo "$fpi : ".$filterlist[$fpi]["column"]." : ".$filterlist[$fpi]["value"]."<br>";
-
 					if ( $col["multiple"] == "yes" && $col["input_type"] == "tableselect" ) {
 						$addwheres .= " AND $filtertable.$selid REGEXP '".str_replace(",", "||", $filterlist[$fpi]["value"])."' ";
 					} elseif ( $col["multiple"] == "yes" && $col["input_type"] == "select" ) { // just type select
 						$addwheres .= " AND $table.".$col["column"]." REGEXP '".str_replace(",", "||", $filterlist[$fpi]["value"])."' ";
 					} elseif ( $col["input_type"] == "tableselect" ) {
-						$addwheres .= " AND $filtertable.$selname IN('".str_replace(",", "','", $filterlist[$fpi]["value"])."') ";
+						$addwheres .= " AND $filtertable.$selid IN('".str_replace(",", "','", $filterlist[$fpi]["value"])."') ";
 					} elseif ( $col["input_type"] == "date" || $col["input_type"] == "datetime" ) {
 						$addwheres .= " AND $table.".$col["column"]." BETWEEN '".str_replace(",", "' AND '", $filterlist[$fpi]["value"])."') ";
 					} elseif ( !empty($col["colfunc"]) ) { // concat val
@@ -264,8 +268,10 @@ if ( !empty($_GET["page"]) ) {
 
 			// clean up of sql variables
 			$fields = rtrim($fields,", ");
-
-			if ( !empty($wheres) && empty($addwheres) ) {
+			if ( $wheres == "0::0" ) {
+				// purposely load nothing
+				$wheres = "WHERE 0";
+			} elseif ( !empty($wheres) && empty($addwheres) ) {
 				$wheres = "WHERE ".rtrim(trim($wheres),"AND");
 			} elseif ( !empty($addwheres) && empty($wheres) ) {
 				$wheres = "WHERE ".ltrim($addwheres, " AND ");

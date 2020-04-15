@@ -8,8 +8,9 @@ $(document).ready(function() {
 	// set variables needed for maintable
 	var pginfo, colsls, rowfmt;
 	var lists;
-	var pagetitle, table, showidcolumn, showrownum, showdeletecolumn, colorderby, rowlimit;
+	var pagetitle, table, showidcolumn, showrownum, showdeletecolumn, colorderby, rowlimit, waittoload;
 	var jsondtcolumns, jsonfiltercolumns, rwfmt;
+	var wheres = '';
 
 	var request = getdata_ajax( 'page_info', {'page': page} );
 	request.done(function(output) {
@@ -34,7 +35,15 @@ $(document).ready(function() {
 		document.title = pagetitle;
 
 		// load maintable function
-		load_maintable( page, 'table_records', colsls, rowfmt, showidcolumn, showrownum, showdeletecolumn, '' );
+		if ( waittoload == "yes" ) {
+			// set where 0
+			wheres = '0::0';
+		}
+		load_maintable( page, 'table_records', colsls, rowfmt, showidcolumn, showrownum, showdeletecolumn, wheres );
+		if ( waittoload == "yes" ) {
+			// open filter menu
+			$('#filter_menu').trigger('click');
+		}
 
 		// Lightbox background
 		$(document).on('click', '.lightbox_bg', function() {

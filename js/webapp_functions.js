@@ -672,7 +672,7 @@ function load_maintable ( page, tableid, columnslist, rowfmt, showidcolumn, show
 	}
 
 	// Populate maintable header
-	$("#" + tableid).html( dt_header( columnslist, 'maintable', showrownum, showdeletecolumn ) ); //add showfilterbutton
+	$("#" + tableid).html( dt_header( columnslist, 'maintable', showrownum, showdeletecolumn ) );
 
 	// Set CSS for rowformat
 	if ( rowfmt != null ) {
@@ -753,9 +753,12 @@ function load_maintable ( page, tableid, columnslist, rowfmt, showidcolumn, show
 			"sInfoFiltered": "(filtered from _MAX_ total records)"
 		}
 	});
+
+	// statr Yet Another Datatables Column Filter
 	yadcf.init(maintable, filter_columns( columnslist, showrownum ),
 		{ filters_tr_index: 1, cumulative_filtering: true }
 	);
+	// show row numbers 
 	if ( showrownum == "yes" ) {
 		maintable.on( 'order.dt search.dt', function() {
 			maintable.column(0, {search:'applied', order:'applied'}).nodes().each( function(cell, i) {
