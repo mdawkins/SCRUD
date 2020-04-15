@@ -407,7 +407,9 @@ if ( !empty($_GET["page"]) ) {
 					}
 				}
 				if ( isset($_GET[$col["column"]]) && empty($_GET[$col["column"]]) ) {
-					$sqlstatement .= $col["column"]." = NULL, ";
+					//$sqlstatement .= $col["column"]." = NULL, ";
+					// Nothing should happen here because if the column has a default value NULL or '' will overrwrite it.
+					$sqlstatement .= "";
 				} elseif ( isset($_GET[$col["column"]]) ) {
 					$sqlstatement .= $col["column"]." = '".addslashes($_GET[$col["column"]])."', ";
 				}
