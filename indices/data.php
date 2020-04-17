@@ -228,7 +228,8 @@ if ( !empty($_GET["page"]) ) {
 				//  Format number to currency or if zero leave --
 				} elseif ( $col["input_type"] == "currency" ) {
 					$tablecolname = "$table.".$col["column"];
-					$fields .= "IF($tablecolname IS NULL OR $tablecolname = '0', '--', CONCAT('$',FORMAT($tablecolname, 2))) AS ".$col["column"].", ";
+					$fields .= "IF($tablecolname IS NULL OR $tablecolname = '0', '0', $tablecolname) AS ".$col["column"].", ";
+					//$fields .= "IF($tablecolname IS NULL OR $tablecolname = '0', '--', CONCAT(FORMAT($tablecolname, 2))) AS ".$col["column"].", ";
 				//  Format YYYY/MM/DD to MM/DD/YYYY or leave --
 				} elseif ( $col["input_type"] == "date" ) {
 					$tablecolname = "$table.".$col["column"];

@@ -76,10 +76,14 @@ function json_dtcolumns ( colslist, showrownum, showdeletecolumn ) {
 	}
 	colslist.forEach(function(col) {
 		var sClassstring = '';
-		if ( col["colview"] == "ellipsis" ) {
+		if ( col["colview"] == "ellipsis" || col["colview"] == "fixedwidth-min" ) {
 			sClassstring = ', "sClass": "truncate"';
+		} else if ( col["colview"] == "fixedwidth" ) {
+			sClassstring = ', "sClass": "truncatedbl"';
+		} else if ( col["colview"] == "fixedwidth-max" ) {
+			sClassstring = ', "sClass": "truncatetpl"';
 		} else if ( col["input_type"] == "currency" ) {
-			sClassstring = ', "sClass": "integer"';
+				sClassstring = ', "sClass": "integer", "render": function( data ) { var spanopen = spanclose = ""; if ( data < 0 ) { spanopen = "<span class=\'negcurrency\'>"; spanclose = "</span>"; } return spanopen + accounting.formatMoney( data, { format: { pos: "%s%v", neg: "%s(%v)", zero: "--" } } ) + spanclose; }';
 		} else if ( col["colview"] == "hide") {
 			sClassstring =', "visible": false';
 		} else if ( col["input_type"] == "drilldown" ) {
@@ -97,8 +101,9 @@ function json_dtcolumns ( colslist, showrownum, showdeletecolumn ) {
 		colsjson = colsjson.replace(/,\n$/, "\n");
 	}
 	colsjson += "  ]\n"; 
-	return JSON.parse(colsjson);
-	//return colsjson;
+	//return JSON.parse(colsjson);
+	// have to use eval here instead of JSON.parse bc of js syntax being passed for the function
+	return eval(colsjson);
 }
 function arrayColumn(array, columnName) {
 	return array.map(function(value,index) {
@@ -128,32 +133,17 @@ function rw_fmt ( lists, rowfmt ) {
 	});
 	return coltype;
 }
-function dt_footer ( columnslist, tableid, showrownum, showdeletecolumn, page ) {
-	var footerhtml = "<table class=\"datatable\" id=\"" + tableid + "\">\n<tfoot>\n\t<tr>\n";
-	if ( showrownum == "yes" && tableid == "maintable" ) {
-		footerhtml += "\t\t<th></th>\n";
-	}
-	// Create th for each column, except crosswalk
-	columnslist.forEach(function(col) {
-		if ( col["input_type"] != "crosswalk" ) {
-			footerhtml += "\t\t<th></th>\n";
-		}
-	});
-	if ( showdeletecolumn != "no" ) {
-		footerhtml += "\t\t<th></th>\n";
-	}
-	footerhtml += "\t</tr></tfoot>\n</table>\n";
-	//console.log(footerhtml);
-	return footerhtml;
-}
 function dt_header ( columnslist, tableid, showrownum, showdeletecolumn, id, page ) {
 	var showfilter = "no";
 	var showfiltermenu = "no";
+	var showfooter = "no";
 	var headerhtml = "<table class=\"datatable\" id=\"" + tableid + "\">\n<thead>\n\t<tr>\n";
 	var filterhtml = "\t<tr>\n";
+	var footerhtml = "<tfoot>\n\t<tr>\n";
 	if ( showrownum == "yes" && tableid == "maintable" ) {
 		headerhtml += "\t\t<th>No.</th>\n";
 		filterhtml += "\t\t<th class=\"filter_content\"></th>\n";
+		footerhtml += "\t\t<th></th>\n";
 	}
 	if ( id !== undefined ) {
 		var dataid = "data-id=\"" + id + "\"";
@@ -164,14 +154,17 @@ function dt_header ( columnslist, tableid, showrownum, showdeletecolumn, id, pag
 	columnslist.forEach(function(col) {
 		if ( col["filterbox"] != "" && col["filterbox"] !== undefined ) { showfilter = "yes"; }
 		if ( col["filtersrv"] != "" && col["filtersrv"] !== undefined ) { showfiltermenu = "yes"; }
+		if ( col["footer"] != "" && col["footer"] !== undefined ) { showfooter = "yes"; }
 		if ( col["input_type"] != "crosswalk" ) {
 			headerhtml += "\t\t<th>" + col["title"] + "</th>\n";
 			filterhtml += "\t\t<th class=\"filter_content\"></th>\n";
+			footerhtml += "\t\t<th>&nbsp;</th>\n";
 		}
 	});
 	if ( showdeletecolumn != "no" ) {
 		filterhtml += "\t\t<th>\n\t\t\t<div class=\"filter_button\"><ul>\n";
 		headerhtml += "\t\t<th>\n\t\t\t<div class=\"topfunc_buttons\"><ul>\n";
+		footerhtml += "\t\t<th></th>\n";
 		if ( tableid == "maintable" ) {
 			if ( showfiltermenu == "yes" ) {
 				filterhtml += "\t\t\t\t<li id=\"filter_menu\" class=\"function_srvfilter\"><a><span title=\"Filter\">Filter</span></a></li>\n\n";
@@ -190,7 +183,13 @@ function dt_header ( columnslist, tableid, showrownum, showdeletecolumn, id, pag
 		headerhtml += "\t</tr>\n";
 		headerhtml += filterhtml;
 	}
-	headerhtml += "\t</tr></thead>\n</table>\n";
+	headerhtml += "\t</tr></thead>\n";
+	footerhtml += "\t</tr>\n</tfoot>\n";
+	if ( showfooter != "no" ) {
+		// combine the two
+		headerhtml += footerhtml;
+	}
+	headerhtml += "</table>\n";
 	//console.log(headerhtml);
 	return headerhtml;
 }
@@ -608,6 +607,7 @@ function drilldowntable ( parenttable ) {
 				row.child( format_header_id( dt_header( ch_colsls, subpage + '_##ID##', '', showdeletecolumn, id, subpage ), tablecount ) ).show();
 				tr.addClass('collapse');
 			}
+
 			//show_loading_message();
 			var childtable = $('#' + subpage + '_' + tablecount).DataTable({
 				"bPaginate": false,
@@ -624,6 +624,22 @@ function drilldowntable ( parenttable ) {
 					"type": 'get'
 					},
 				"columns": json_dtcolumns( ch_colsls, 'no', showdeletecolumn ),
+				"footerCallback": function ( row, data ) {
+					for ( let k = 0; k < ch_colsls.length; k++ ) {
+						if ( ch_colsls[k]["footer"] == "yes" ) {
+							var api = this.api(), data;
+							// Remove the formatting to get integer data for summation
+							var intVal = function ( i ) { return typeof i === 'string' ?  i.replace(/[\$,]/g, '').replace('--', '0')*1 : typeof i === 'number' ?  i : 0; };
+							// Total over all pages
+							var total = api.column( k, { search: 'applied' } ).data().reduce( function (a, b) { return intVal(a) + intVal(b); }, 0 );
+							// Update footer
+							if ( total < 0 ) {
+								$( api.column( k ).footer() ).addClass('negcurrency');
+							}
+							$( api.column( k ).footer() ).html( accounting.formatMoney(total, { format: { pos: "%s%v", neg: "%s(%v)", zero:"%s --" } } ) );
+						}
+					}
+				},
 				"aoColumnDefs": [ { "bSortable": false, "aTargets": [-1] } ],
 			});
 		});
@@ -676,6 +692,7 @@ function filter_menu ( page, tableid, columnslist, rowfmt, showidcolumn, showrow
 
 			// Clear and Destroy previously initialized DataTables
 			$("#" + dt_table).DataTable().clear().destroy();
+			//$("#" + dt_table).find('[id^=yadcf]').hide();
 
 			// load maintable with filterapi = form_data
 			load_maintable( page, dt_table, columnslist, rowfmt, showidcolumn, showrownum, showdeletecolumn, form_data );
@@ -693,7 +710,7 @@ function load_maintable ( page, tableid, columnslist, rowfmt, showidcolumn, show
 		showfilterbutton = 'yes';
 	}
 
-	// Populate maintable header
+	// Populate maintable header & footer
 	$("#" + tableid).html( dt_header( columnslist, 'maintable', showrownum, showdeletecolumn ) );
 
 	// Set CSS for rowformat
@@ -765,6 +782,22 @@ function load_maintable ( page, tableid, columnslist, rowfmt, showidcolumn, show
 			}
 		},
 		"columns": json_dtcolumns( columnslist, showrownum, showdeletecolumn ),
+		"footerCallback": function ( row, data ) {
+			for ( let k = 0; k < columnslist.length; k++ ) {
+				if ( columnslist[k]["footer"] == "yes" ) {
+					var api = this.api(), data;
+					// Remove the formatting to get integer data for summation
+					var intVal = function ( i ) { return typeof i === 'string' ?  i.replace(/[\$,]/g, '').replace('--', '0')*1 : typeof i === 'number' ?  i : 0; };
+					// Total over all pages
+					var total = api.column( k, { search: 'applied' } ).data().reduce( function (a, b) { return intVal(a) + intVal(b); }, 0 );
+					// Update footer
+					if ( total < 0 ) {
+						$( api.column( k ).footer() ).addClass('negcurrency');
+					}
+					$( api.column( k ).footer() ).html( accounting.formatMoney(total, { format: { pos: "%s%v", neg: "%s(%v)", zero: "--" } } ) );
+				}
+			}
+		},
 		"order": function( ) { if ( showrownum == "yes" ) { return "[[ 1, 'asc' ]]"; } },
 		"aoColumnDefs": [ { "bSortable": false, "aTargets": [-1] } ],
 		"lengthMenu": [[50, -1], [50, "All"]],

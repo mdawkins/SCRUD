@@ -307,6 +307,7 @@ table.datatable td {
 }
 
 #filtertable table td,
+table.datatable tfoot th,
 table.datatable thead th {
   background-color: #666;
   font-weight: bold;
@@ -345,9 +346,14 @@ table.datatable tbody tr:hover td.dataTables_empty {
 table.datatable tbody td.record_name {
   width: 100%;
 }
+table.datatable tfoot th.integer,
 table.datatable tbody td.integer {
   text-align: right;
   white-space: nowrap;
+}
+table.datatable tfoot th.negcurrency,
+table.datatable tbody span.negcurrency {
+  color: #a00;
 }
 table.datatable tbody td.nowrap {
   white-space: nowrap;
