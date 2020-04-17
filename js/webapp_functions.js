@@ -174,7 +174,7 @@ function dt_header ( columnslist, tableid, showrownum, showdeletecolumn, id, pag
 		}
 		else if ( tableid != "maintable" ) {
 			headerhtml += "\t\t\t\t<li id=\"add_record\" class=\"function_add\"><a " + dataid + " " + dataname + "><span title=\"Add Record\">Add</span></a></li>\n";
-			headerhtml += "\t\t\t\t<li id=\"attach_record\" class=\"function_attach\"><a " + dataid + " " + dataname + "><span title=\"Attach Record\">Attach</span></a></li>\n\n";
+			//headerhtml += "\t\t\t\t<li id=\"attach_record\" class=\"function_attach\"><a " + dataid + " " + dataname + "><span title=\"Attach Record\">Attach</span></a></li>\n\n";
 		}
 		headerhtml += "\t\t\t</ul></div>\n\t\t</th>\n";
 		filterhtml += "\t\t\t</ul></div>\n\t\t</th>\n";

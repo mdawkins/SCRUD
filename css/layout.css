@@ -364,6 +364,18 @@ table.datatable tbody td.truncate {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+table.datatable tbody td.truncatedbl {
+  max-width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+table.datatable tbody td.truncatetpl {
+  max-width: 320px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 table.datatable thead tbody th.functions, td.functions {
   max-width: 70px;
   text-align: center;
