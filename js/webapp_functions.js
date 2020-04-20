@@ -585,7 +585,7 @@ function drilldowntable ( parenttable ) {
 		let id = $(this).data('id');
 		let subpage = $(this).data('name');
 		var request = getdata_ajax( 'page_info', {'page': subpage} );
-			var tr = $(this).closest('tr');
+		var tr = $(this).closest('tr');
 		var row = parenttable.row( tr );
 			request.done(function(output) {
 			if (output.result == 'success' && output.message == 'page_info') {
@@ -635,8 +635,10 @@ function drilldowntable ( parenttable ) {
 							// Update footer
 							if ( total < 0 ) {
 								$( api.column( k ).footer() ).addClass('negcurrency');
+							} else {
+								$( api.column( k ).footer() ).removeClass('negcurrency');
 							}
-							$( api.column( k ).footer() ).html( accounting.formatMoney(total, { format: { pos: "%s%v", neg: "%s(%v)", zero:"%s --" } } ) );
+							$( api.column( k ).footer() ).html( accounting.formatMoney(total, { format: { pos: "%s%v", neg: "%s(%v)", zero:"--" } } ) );
 						}
 					}
 				},
@@ -793,6 +795,8 @@ function load_maintable ( page, tableid, columnslist, rowfmt, showidcolumn, show
 					// Update footer
 					if ( total < 0 ) {
 						$( api.column( k ).footer() ).addClass('negcurrency');
+					} else {
+						$( api.column( k ).footer() ).removeClass('negcurrency');
 					}
 					$( api.column( k ).footer() ).html( accounting.formatMoney(total, { format: { pos: "%s%v", neg: "%s(%v)", zero: "--" } } ) );
 				}
