@@ -231,7 +231,7 @@ function addedit_form ( columnslist, lists, selslist ) {
 	var formhtml = "<h2>##blank##</h2>\n";
 	formhtml += "<form class=\"form add\" id=\"form_record\" data-id=\"\" novalidate>\n";
 	columnslist.forEach(function(col) {
-		if ( col["input_type"] != "noform" && col["input_type"] != "drilldown" && col["input_type"] != "crosswalk" ) {
+		if ( col["input_type"] != "noform" && col["input_type"] != "drilldown" && col["input_type"] != "crosswalk" && col["input_type"] != "columntotal" ) {
 			if ( col["required"] == "yes" ) {
 				var errspan = "<span class='required'>*</span>"; 
 				var errinput = "required";

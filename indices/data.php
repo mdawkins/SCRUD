@@ -18,6 +18,11 @@ if ( !empty($_GET["page"]) ) {
 	if ( isset($_GET["job"]) ) {
 		$job = $_GET["job"];
 		if ( $job == "get_records" || $job == "get_record" || $job == "add_record" || $job == "edit_record" || $job == "delete_record" || $job == "page_info" || $job == "page_lists" || $job == "attach_record" || $job == "ajax_select" ) {
+			// set name of table_pk or id
+			if ( empty($table_pk) || !isset($table_pk) ) {
+				$table_pk = "id";
+			}
+			// set value for id / table_pk
 			if ( isset($_GET["id"]) ) {
 				$id = $_GET["id"];
 				if ( !is_numeric($id) ) {
@@ -34,7 +39,7 @@ if ( !empty($_GET["page"]) ) {
 	// Valid job found
 	if ( $job != "" ) {
 		// Connect to database
-		$conn = db_connect($servername, $username, $password, $database);
+		$conn = db_connect($servername, $username, $password, $database, $datasource);
 		if ( $result == "error" ) {
 			//$result = "error";
 			$message = "Failed to connect to database: ".mysqli_connect_error();
@@ -151,28 +156,71 @@ if ( !empty($_GET["page"]) ) {
 			// END filter API
 
 			// BUILD SQL STATMENT BASED ON CONFIG FILE ARRAYS FOR PAGE
+			$table = encap_mixedcase($table);
+
+			// table_pk is used to populate other html elements
+			$tbl_pk = encap_mixedcase($table_pk);
+
+			// for oracle schema
+			$dbtable = $table;
+			if ( !empty($datasource) ) {
+				$dbtable = "$database.$table";
+			}
+
 			foreach ( $colslist as $i => $col ) {
+				// check to see if column name is mixed case and if so encapsulate with proper character
+				// array elements to be encapsulated: selcol, selname, selid, seltable, wherekey, parselcol, column, table, table_pk, Anything from lists?
+				$columnname = encap_mixedcase($col["column"]);
+
 				// IF col input type is a tableselect OR input type is a crosswalk and selcol can be found in columns colslist
-				if ( ( $col["input_type"] == "tableselect" || $col["input_type"] == "crosswalk" ) && array_search($col["column"], array_column($selslist, "selcol")) !== null ) {
+				if ( ( $col["input_type"] == "tableselect" || $col["input_type"] == "crosswalk" || $col["input_type"] == "columntotal" ) && array_search($col["column"], array_column($selslist, "selcol")) !== null ) {
 					// SELCOL should == COLUMN
 					//echo "{SELCOLINDEX: $selcolindex, SELCOL: ".$selslist[$selcolindex]["selcol"].", COLUMN: ".$col["column"]."},<br>";
 
 					// this will be faster to access the selcol == column pair instead if looping thru the selslist array for each column array
 					$selcolindex = array_search($col["column"], array_column($selslist, "selcol"));
-					$selcol = $selslist[$selcolindex]["selcol"];
-					$selname = $selslist[$selcolindex]["selname"];
-					$selid = $selslist[$selcolindex]["selid"];
-					$seltable = $selslist[$selcolindex]["seltable"];
+					$selcol = encap_mixedcase($selslist[$selcolindex]["selcol"]); // not sure it is used
+					$selname = encap_mixedcase($selslist[$selcolindex]["selname"]);
+					$selid = encap_mixedcase($selslist[$selcolindex]["selid"]);
+					$seltable = encap_mixedcase($selslist[$selcolindex]["seltable"]);
 					$seljoin = $selslist[$selcolindex]["seljoin"]; // seljoin == yes means LEFT JOIN seltable as t$i
-					$parselcol = $selslist[$selcolindex]["parselcol"];
-					$wherekey = $selslist[$selcolindex]["wherekey"];
+					$parselcol = encap_mixedcase($selslist[$selcolindex]["parselcol"]);
+					$wherekey = encap_mixedcase($selslist[$selcolindex]["wherekey"]);
+
+					// for oracle schema
+					$dbseltable = $seltable;
+					$dbasvar = "AS";
+					if ( !empty($datasource) ) {
+						$dbseltable = "$database.$seltable";
+						$dbasvar = "";
+					}
 
 					// set default for table for addwheres
 					$filtertable = "t$i";
 
 					// don't join unless we need to only with crosswalk table not eq to childtable OR specify seljoin = yes
 					if ( ($col["input_type"] == "crosswalk" && $seltable != $table) || $seljoin == "yes" ) {
-						$ljointables .= "LEFT JOIN $seltable AS t$i ON ";
+						$ljointables .= "LEFT JOIN $dbseltable $dbasvar t$i ON ";
+					} elseif ( $col["input_type"] == "columntotal" ) {
+						$ljointables .= "LEFT JOIN ";
+					}
+
+					// columntotal create inner select statement
+					if ( $col["input_type"] == "columntotal" ) {
+						// set default type to SUM
+						$totaltype = "SUM";
+						if ( $col["total_type"] == "sum" ) {
+							$totaltype = "SUM";
+						} elseif ( $col["total_type"] == "avg" ) {
+							$totaltype = "AVG";
+						} elseif ( $col["total_type"] == "max" ) {
+							$totaltype = "MAX";
+						} elseif ( $col["total_type"] == "min" ) {
+							$totaltype = "MIN";
+						} elseif ( $col["total_type"] == "cnt" ) {
+							$totaltype = "COUNT";
+						}
+						$innersqlstatement = "( SELECT $selid, $totaltype($selname) AS $columnname FROM $dbseltable GROUP BY $selid ) t$i ON";
 					}
 
 					// if crosswalk
@@ -181,6 +229,7 @@ if ( !empty($_GET["page"]) ) {
 							$cwtable = "t$i";
 							// honestly this is backwards, the selid should = id
 							if ( empty($selname) ) {
+								// table_pk maybe?
 								$selname = "id";
 							}
 							if ( !empty($parselcol) ) {
@@ -203,46 +252,69 @@ if ( !empty($_GET["page"]) ) {
 					// if tableselect
 					} elseif ( $seljoin == "yes" ) {
 						// seltable used if seljoin == yes
-						$fields .= "t$i.".$selname." AS ".$col["column"].", ";
+						$fields .= "t$i.$selname AS $columnname, ";
 						// filtertable already set
-						$ljointables .= $table.".".$col["column"]." = t$i.$selid ";
+						$ljointables .= "$table.$columnname = t$i.$selid ";
 					// why use left joins when the data is the same on the datatable but this is used to create tableselects in the forms
 					// Default logic if col input type is tableselect
 					} elseif ( $seljoin != "yes" && !empty($parselcol) ) { // Not intended for nested/cascading columns, expected empty(partitle)
 						// use seltable from parent select column
-						$fields .= "$parenttable.".$col["column"].", ";
+						$fields .= "$partable.$columnname, ";
 						$filtertable = "t".array_search( $parselcol, array_column($colslist, "column") );
 						// no ljointables
+					} elseif ( $col["input_type"] == "columntotal" ) {
+						$fields .= "t$i.$columnname, ";
+						// filtertable already set
+						$ljointables .= "$innersqlstatement $table.$selid = t$i.$selid ";
 					} else {
-						$fields .= "$table.".$col["column"].", ";
+						$fields .= "$table.$columnname, ";
 						// filtertable already set
 						// no ljointables
 					}
 				// IF pivotjoin
 				} elseif ( $col["input_type"] == "pivotjoin" ) {
-					$fields .= "`".$col["column"]."`, ";
-					$ljointables .= " LEFT JOIN (SELECT $pivkey, GROUP_CONCAT(DISTINCT(CASE WHEN $joinkey = '".$col["key"]."' THEN $keyname END) ORDER BY 1 SEPARATOR ', ') AS '".$col["column"]."' FROM $jointable WHERE $joinwherekey = $joinwhereval AND $joinkey = '".$col["key"]."' GROUP BY $pivkey) AS t".$i." ON $table.id=t$i.$pivkey";
+					$fields .= "`".$columnname."`, ";
+					$ljointables .= " LEFT JOIN (SELECT $pivkey, GROUP_CONCAT(DISTINCT(CASE WHEN $joinkey = '".$col["key"]."' THEN $keyname END) ORDER BY 1 SEPARATOR ', ') AS '$columnname' FROM $jointable WHERE $joinwherekey = $joinwhereval AND $joinkey = '".$col["key"]."' GROUP BY $pivkey) AS t".$i." ON $table.id=t$i.$pivkey";
+					// table_pk maybe?
 				//  Show in viewtable but not in the addedit form
 				} elseif ( $col["input_type"] == "noform" ) {
-					$fields .= $col["colfunc"]." AS ".str_replace("%T%", "t$i", $col["column"]).", ";
+					$fields .= str_replace("%T%", "$table", $col["colfunc"])." AS $columnname, ";
 				//  Format number to currency or if zero leave --
 				} elseif ( $col["input_type"] == "currency" ) {
-					$tablecolname = "$table.".$col["column"];
-					$fields .= "IF($tablecolname IS NULL OR $tablecolname = '0', '0', $tablecolname) AS ".$col["column"].", ";
-					//$fields .= "IF($tablecolname IS NULL OR $tablecolname = '0', '--', CONCAT(FORMAT($tablecolname, 2))) AS ".$col["column"].", ";
+					$tablecolname = "$table.$columnname";
+					if ( $service == "mysql" ) {
+						$fields .= "IF($tablecolname IS NULL, '0', $tablecolname) AS $columnname, ";
+					} elseif ( $service == "oracle" ) {
+						$fields .= "NVL($tablecolname, 0) AS $columnname, ";
+					} elseif ( $service == "pgsql" ) {
+						$fields .= "COALESCE($tablecolname, 0) AS $columnname, ";
+					}
+					//$fields .= "IF($tablecolname IS NULL OR $tablecolname = '0', '--', CONCAT(FORMAT($tablecolname, 2))) AS $columnname, ";
 				//  Format YYYY/MM/DD to MM/DD/YYYY or leave --
 				} elseif ( $col["input_type"] == "date" ) {
-					$tablecolname = "$table.".$col["column"];
-					$fields .= "IF($tablecolname IS NULL OR $tablecolname = '0000-00-00', '--', DATE_FORMAT($tablecolname, '%m/%d/%Y')) AS ".$col["column"].", ";
+					$tablecolname = "$table.$columnname";
+					if ( $service == "mysql" ) {
+						$fields .= "IF($tablecolname IS NULL OR $tablecolname = '0000-00-00', '--', DATE_FORMAT($tablecolname, '%m/%d/%Y')) AS $columnname, ";
+					} elseif ( $service == "oracle" ) {
+						$fields .= "NVL(TO_CHAR($tablecolname, 'mm/dd/yyyy'), '--') AS $columnname, ";
+					} elseif ( $service == "pgsql" ) {
+						$fields .= "COALESCE(TO_CHAR($tablecolname, 'mm/dd/yyyy'), '--') AS $columnname, ";
+					}
 				//  Format YYYY/MM/DD 24H to MM/DD/YYYY 12a/p or leave --
 				} elseif ( $col["input_type"] == "datetime" ) {
-					$tablecolname = "$table.".$col["column"];
-					$fields .= "IF($tablecolname IS NULL OR $tablecolname = '0000-00-00 00:00:00', '--', DATE_FORMAT($tablecolname, '%m/%d/%Y %r')) AS ".$col["column"].", ";
+					$tablecolname = "$table.$columnname";
+					if ( $service == "mysql" ) {
+						$fields .= "IF($tablecolname IS NULL OR $tablecolname = '0000-00-00 00:00:00', '--', DATE_FORMAT($tablecolname, '%m/%d/%Y %r')) AS $columnname, ";
+					} elseif ( $service == "oracle" ) {
+						$fields .= "NVL(TO_CHAR($tablecolname, 'mm/dd/yyyy HH12:MI:SS'), '--') AS $columnname, ";
+					} elseif ( $service == "pgsql" ) {
+						$fields .= "COALESCE(TO_CHAR($tablecolname, 'mm/dd/yyyy HH12:MI:SS'), '--') AS $columnname, ";
+					}
 				// Produce a Arrow button and display childrecords in a subtable
 				} elseif ( $col["input_type"] == "drilldown" || $col["input_type"] == "crosswalk" ) {
 					continue;
 				} else {
-					$fields .= "$table.".$col["column"].", ";
+					$fields .= "$table.$columnname, ";
 				}
 
 				// filter API addwheres
@@ -251,19 +323,20 @@ if ( !empty($_GET["page"]) ) {
 				// date/datetime: between
 				$fpi = array_search($col["column"], array_column($filterlist, "column"));
 				if ( $fpi !== false && !empty($_GET["filter"]) && !empty($filterlist) ) {
+					// encapsulate filtertable
 					//echo "$fpi : ".$filterlist[$fpi]["column"]." : ".$filterlist[$fpi]["value"]."<br>";
 					if ( $col["multiple"] == "yes" && $col["input_type"] == "tableselect" ) {
 						$addwheres .= " AND $filtertable.$selid REGEXP '".str_replace(",", "||", $filterlist[$fpi]["value"])."' ";
 					} elseif ( $col["multiple"] == "yes" && $col["input_type"] == "select" ) { // just type select
-						$addwheres .= " AND $table.".$col["column"]." REGEXP '".str_replace(",", "||", $filterlist[$fpi]["value"])."' ";
+						$addwheres .= " AND $table.$columnname REGEXP '".str_replace(",", "||", $filterlist[$fpi]["value"])."' ";
 					} elseif ( $col["input_type"] == "tableselect" ) {
 						$addwheres .= " AND $filtertable.$selid IN('".str_replace(",", "','", $filterlist[$fpi]["value"])."') ";
 					} elseif ( $col["input_type"] == "date" || $col["input_type"] == "datetime" ) {
-						$addwheres .= " AND $table.".$col["column"]." BETWEEN '".str_replace(",", "' AND '", $filterlist[$fpi]["value"])."') ";
+						$addwheres .= " AND $table.$columnname BETWEEN '".str_replace(",", "' AND '", $filterlist[$fpi]["value"])."') ";
 					} elseif ( !empty($col["colfunc"]) ) { // concat val
 						$addwheres .= " AND ".$col["colfunc"]." IN ('".str_replace(",", "','", $filterlist[$fpi]["value"])."') ";
 					} else { // to match input type select and anything else thrown at the API
-						$addwheres .= " AND $table.".$col["column"]." IN('".str_replace(",", "','", $filterlist[$fpi]["value"])."') ";
+						$addwheres .= " AND $table.$columnname IN('".str_replace(",", "','", $filterlist[$fpi]["value"])."') ";
 					}
 				}
 				// end filter API addwheres
@@ -285,7 +358,7 @@ if ( !empty($_GET["page"]) ) {
 				$limitrows = "LIMIT $rowlimit";
 			} else unset($limitrows);
 
-			$sqlstatement = "SELECT $table.id, $fields FROM $table $ljointables $wheres $groupby $colorderby $limitrows";
+			$sqlstatement = "SELECT $table.$tbl_pk, $fields FROM $dbtable $ljointables $wheres $groupby $colorderby $limitrows";
 			//
 			// END BUILD SQL STATMENT BASED ON CONFIG FILE ARRAYS FOR PAGE
 			//
@@ -300,6 +373,7 @@ if ( !empty($_GET["page"]) ) {
 				$message = "query success";
 				$j=0;
 				while ( $row = db_fetch_assoc($query) ) {
+					// would be nice to move this to the client side and instead produce pure JSON
 					$functions = '<div class="function_buttons"><ul>';
 					$functions .= '<li class="function_edit"><a data-id="'.$row["id"].'" data-name="'.$_GET["dt_table"].'"><span>Edit</span></a></li>';
 					$functions .= '<li class="function_delete"><a data-id="'.$row["id"].'" data-name="'.$_GET["dt_table"].'"><span>Delete</span></a></li>';
@@ -328,7 +402,7 @@ if ( !empty($_GET["page"]) ) {
 							if ( isset($col["columnid"]) ) {
 								$rowid = $col["columnid"];
 							} else {
-								$rowid = "id";
+								$rowid = $table_pk;
 							}
 							$row[$col["column"]] = '<div class="function_buttons"><ul>';
 							$row[$col["column"]] .= '<li class="function_drilldown"><a data-id="'.$row[$rowid].'" data-name="'.$col["column"].'"><span>Show</span></a></li>';
@@ -337,6 +411,7 @@ if ( !empty($_GET["page"]) ) {
 						} elseif ( $col["input_type"] == "crosswalk" ) {
 							continue;
 						// Unfinished - I'd like to find a way to have Datatables produce onhoover field data
+						// this is possible with render and span title in DataTables
 						} else { // this is legacy td title from pajm, not going to work here
 							if ( isset($col["colwidth"]) && $col["colwidth"] < strlen($colstring) ) {
 								$titlestring = "title=\"$colstring\"";
@@ -365,7 +440,7 @@ if ( !empty($_GET["page"]) ) {
 				$result = "error";
 				$message = "id missing";
 			} else {
-				$sqlstatement = "SELECT * FROM $table WHERE id = '".addslashes($id)."'";
+				$sqlstatement = "SELECT * FROM $table WHERE $table_pk = '".addslashes($id)."'";
 				$query = db_query($sqlstatement);
 				if ( !$query ) {
 					$result = "error";
@@ -450,7 +525,7 @@ if ( !empty($_GET["page"]) ) {
 					}
 				}
 				$sqlstatement = rtrim($sqlstatement, ', ');
-				$sqlstatement .= " WHERE id = '".addslashes($id)."'";
+				$sqlstatement .= " WHERE $table_pk = '".addslashes($id)."'";
 				$query = db_query($sqlstatement);
 				if ( !$query ) {
 					$result = "error";
@@ -468,7 +543,7 @@ if ( !empty($_GET["page"]) ) {
 				$result = "error";
 				$message = "id missing";
 			} else {
-				$sqlstatement = "DELETE FROM $table WHERE id = '".addslashes($id)."'";
+				$sqlstatement = "DELETE FROM $table WHERE $table_pk = '".addslashes($id)."'";
 				$query = db_query($sqlstatement);
 				if ( !$query ) {
 					$result = "error";
