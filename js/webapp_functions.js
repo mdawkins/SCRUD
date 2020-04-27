@@ -572,10 +572,13 @@ function ajaxselect ( attributeid, page, lists, selslist ) {
 	});
 }
 function drilldowntable ( parenttable ) {
+	var ddtableid = parenttable.tables().nodes().to$().attr('id');
+
 	// Show Drill Down table
 	var tablecount=1;
 	$(document).on('click', '.function_drilldown a', function(e) {
 		e.preventDefault();
+
 		// set variables needed for childtable
 		//var pginfo, ch_colsls, ch_lists, ch_rowfmt;
 		var pginfo, ch_colsls;
@@ -587,65 +590,91 @@ function drilldowntable ( parenttable ) {
 		var request = getdata_ajax( 'page_info', {'page': subpage} );
 		var tr = $(this).closest('tr');
 		var row = parenttable.row( tr );
-			request.done(function(output) {
-			if (output.result == 'success' && output.message == 'page_info') {
-				// assign individual variables to their values
-				for (let key in output.pginfo) {
-					var varname = key + ' = \"' + output.pginfo[key] + '\"';
-					eval(varname);
-				}
-				ch_colsls = output.colsls;
-				//ch_lists = output.lists;
-				//ch_rowfmt = output.rowfmt;
-			}
-				if ( row.child.isShown() ) {
-				// This row is already open - close it
-				row.child.hide();
-				tr.removeClass('collapse');
-			} else {
-				// Open this row
-				row.child( format_header_id( dt_header( ch_colsls, subpage + '_##ID##', '', showdeletecolumn, id, subpage ), tablecount ) ).show();
-				tr.addClass('collapse');
-			}
 
-			//show_loading_message();
-			var childtable = $('#' + subpage + '_' + tablecount).DataTable({
-				"bPaginate": false,
-				"bSortable": false,
-				"searching": false,
-				"paging": false,
-				"info": false,
-				"ajax": {
-					"url": 'data.php?job=get_records',
-					"cache": true,
-					"data": {'id': id ,'page': subpage, 'dt_table': subpage},
-					"dataType": 'json',
-					"contentType": 'application/json; charset=utf-8',
-					"type": 'get'
-					},
-				"columns": json_dtcolumns( ch_colsls, 'no', showdeletecolumn ),
-				"footerCallback": function ( row, data ) {
-					for ( let k = 0; k < ch_colsls.length; k++ ) {
-						if ( ch_colsls[k]["footer"] == "yes" ) {
-							var api = this.api(), data;
-							// Remove the formatting to get integer data for summation
-							var intVal = function ( i ) { return typeof i === 'string' ?  i.replace(/[\$,]/g, '').replace('--', '0')*1 : typeof i === 'number' ?  i : 0; };
-							// Total over all pages
-							var total = api.column( k, { search: 'applied' } ).data().reduce( function (a, b) { return intVal(a) + intVal(b); }, 0 );
-							// Update footer
-							if ( total < 0 ) {
-								$( api.column( k ).footer() ).addClass('negcurrency');
-							} else {
-								$( api.column( k ).footer() ).removeClass('negcurrency');
-							}
-							$( api.column( k ).footer() ).html( accounting.formatMoney(total, { format: { pos: "%s%v", neg: "%s(%v)", zero:"--" } } ) );
-						}
+		// this produces the table id of the drilldown
+		var tableid = $(this).closest('table')[0].id;
+		console.log( 'ddptid: ' + ddtableid + ' ptid: ' + tableid + ' ctid: ' + subpage );
+
+		// if parenttable == this closest table  && childpage is diff, then proceed
+		if ( ddtableid == tableid && tableid != subpage ) {
+
+			request.done(function(output) {
+				if (output.result == 'success' && output.message == 'page_info') {
+					// assign individual variables to their values
+					for (let key in output.pginfo) {
+						var varname = key + ' = \"' + output.pginfo[key] + '\"';
+						eval(varname);
 					}
-				},
-				"aoColumnDefs": [ { "bSortable": false, "aTargets": [-1] } ],
+					ch_colsls = output.colsls;
+					//ch_lists = output.lists;
+					//ch_rowfmt = output.rowfmt;
+				}
+				if ( row.child.isShown() ) {
+					// This row is already open - close it
+					row.child.hide();
+					tr.removeClass('collapse');
+					console.log( 'closing: ' + subpage );
+				} else {
+					// Open this row
+					row.child( format_header_id( dt_header( ch_colsls, subpage + '_##ID##', '', showdeletecolumn, id, subpage ), tablecount ) ).show();
+					tr.addClass('collapse');
+					console.log( 'opening: ' + subpage );
+				}
+
+				// is child drilldown set
+				var issetdrilldown = 0;
+				ch_colsls.forEach(function(ch_col) {
+					if ( ch_col["input_type"] === "drilldown" ) {
+						issetdrilldown = 1;
+					}
+				});
+
+				//show_loading_message();
+				var childtable = $('#' + subpage + '_' + tablecount).DataTable({
+					"bPaginate": false,
+					"bSortable": false,
+					"searching": false,
+					"paging": false,
+					"info": false,
+					"ajax": {
+						"url": 'data.php?job=get_records',
+						"cache": true,
+						"data": {'id': id ,'page': subpage, 'dt_table': subpage},
+						"dataType": 'json',
+						"contentType": 'application/json; charset=utf-8',
+						"type": 'get'
+						},
+					"columns": json_dtcolumns( ch_colsls, 'no', showdeletecolumn ),
+					"footerCallback": function ( row, data ) {
+						for ( let k = 0; k < ch_colsls.length; k++ ) {
+							if ( ch_colsls[k]["footer"] == "yes" ) {
+								var api = this.api(), data;
+								// Remove the formatting to get integer data for summation
+								var intVal = function ( i ) { return typeof i === 'string' ?  i.replace(/[\$,]/g, '').replace('--', '0')*1 : typeof i === 'number' ?  i : 0; };
+								// Total over all pages
+								var total = api.column( k, { search: 'applied' } ).data().reduce( function (a, b) { return intVal(a) + intVal(b); }, 0 );
+								// Update footer
+								if ( total < 0 ) {
+									$( api.column( k ).footer() ).addClass('negcurrency');
+								} else {
+									$( api.column( k ).footer() ).removeClass('negcurrency');
+								}
+								$( api.column( k ).footer() ).html( accounting.formatMoney(total, { format: { pos: "%s%v", neg: "%s(%v)", zero:"--" } } ) );
+							}
+						}
+					},
+					"aoColumnDefs": [ { "bSortable": false, "aTargets": [-1] } ],
+				});
+
+				//For each grandchild table
+				if ( issetdrilldown === 1 ) {
+					console.log ( 'entering grandchild tables' );
+					drilldowntable( childtable );
+				}
 			});
-		});
-		tablecount++;
+			tablecount++;
+		}
+		// end of catch
 	});
 }
 function filter_menu ( page, tableid, columnslist, rowfmt, showidcolumn, showrownum, showdeletecolumn ) {
