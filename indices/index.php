@@ -31,6 +31,7 @@
 		<script charset="utf-8" src="//cdn.datatables.net/colreorder/1.5.2/js/dataTables.colReorder.min.js"></script>
 		<script charset="utf-8" src="//cdn.datatables.net/fixedcolumns/3.3.0/js/dataTables.fixedColumns.min.js"></script>
 		<script charset="utf-8" src="//cdn.datatables.net/fixedheader/3.1.6/js/dataTables.fixedHeader.min.js"></script>
+		<script charset="utf-8" src="//cdn.datatables.net/rowgroup/1.1.1/js/dataTables.rowGroup.min.js"></script>
 		<script charset="utf-8" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
 		<script charset="utf-8" src="//cdn.datatables.net/plug-ins/1.10.20/sorting/datetime-moment.js"></script>
 		<script charset="utf-8" src="http://openexchangerates.github.io/accounting.js/accounting.min.js"></script>

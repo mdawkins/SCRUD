@@ -96,7 +96,7 @@ function json_dtcolumns ( colslist, showrownum, showdeletecolumn ) {
 		delete sClassstring;
 	});
 	if ( showdeletecolumn != "no" ) {
-		colsjson += "		{ \"data\": \"functions\", \"sClass\": \"functions\" }\n";
+		colsjson += "		{ \"data\": \"functions\", \"sClass\": \"functions\", \"orderable\": false }\n";
 	} else {
 		colsjson = colsjson.replace(/,\n$/, "\n");
 	}
@@ -663,7 +663,6 @@ function drilldowntable ( parenttable ) {
 							}
 						}
 					},
-					"aoColumnDefs": [ { "bSortable": false, "aTargets": [-1] } ],
 				});
 
 				//For each grandchild table
@@ -757,11 +756,14 @@ function load_maintable ( page, tableid, columnslist, rowfmt, showidcolumn, show
 	}
 
 	// set showdeletecolumn to yess if blank
-	var ltCol, rtCol;
-	ltCol = rtCol = 0;
-	if ( showdeletecolumn == null || showdeletecolumn != 'no' ) {
-		//showdeletecolumn = 'yes';
+	var ltCol, rtCol, rtReorderCol;
+	ltCol = rtCol = rtReorderCol = 0;
+	console.log(showdeletecolumn);
+	if ( showdeletecolumn == null && showdeletecolumn != 'no' ) {
+		showdeletecolumn = 'yes';
 		rtCol = 1;
+		rtReorderCol = 1;
+		console.log(showdeletecolumn);
 	}
 	if ( showidcolumn != null || showidcolumn == 'yes' ) {
 		ltCol++;
@@ -778,6 +780,10 @@ function load_maintable ( page, tableid, columnslist, rowfmt, showidcolumn, show
 			//fixedColumns does not work well with drilldown tables
 			ltCol = rtCol = 0;
 		}
+		if ( col["rowgroup"] === "yes" ) {
+			//fixedColumns does not work with rowgroup
+			ltCol = rtCol = 0;
+		}
 	});
 
 	// On page load: datatable
@@ -787,8 +793,8 @@ function load_maintable ( page, tableid, columnslist, rowfmt, showidcolumn, show
 		"scrollY": "80vh", // Vertical Height (72) in window
 		"scrollCollapse": true, // Allows thead row to stay at top while scrolling
 		"orderCellsTop": true, // Only allow sorting from top thead row
-		"colReorder": {fixedColumnsRight: 1}, // Drap N Drop Columns
-		"fixedColumns": {leftColumns: ltCol, rightColumns: rtCol}, // has problems with drilldown tables
+		"colReorder": {fixedColumnsRight: rtReorderCol},
+		"fixedColumns": {leftColumns: ltCol, rightColumns: rtCol}, // has problems with drilldown tables and rowGroup
 		"dom": 'rt<"bottom"pil><"clear">',
 		"ajax": {
 			"url": 'data.php?job=get_records',
@@ -832,7 +838,15 @@ function load_maintable ( page, tableid, columnslist, rowfmt, showidcolumn, show
 			}
 		},
 		"order": function( ) { if ( showrownum == "yes" ) { return "[[ 1, 'asc' ]]"; } },
-		"aoColumnDefs": [ { "bSortable": false, "aTargets": [-1] } ],
+		"orderFixed": get_rowgroup( columnslist, "list" ),
+		"rowGroup": {
+			"dataSrc": get_rowgroup( columnslist, "name" ),
+			"emptyDataGroup": null
+		},
+		"columnDefs": [ {
+			"targets": get_rowgroup( columnslist, "hidecols" ),
+			"visible": false
+		} ],
 		"lengthMenu": [[50, -1], [50, "All"]],
 		"oLanguage": {
 			"oPaginate": { "sFirst": " ", "sPrevious": " ", "sNext": " ", "sLast": " ", },
@@ -888,4 +902,36 @@ function load_maintable ( page, tableid, columnslist, rowfmt, showidcolumn, show
 	$.fn.dataTable.moment( 'MM/DD/YYYY' );
 	$.fn.dataTable.moment( 'MM-DD-YYYY' );
 
+}
+function get_rowgroup ( columnslist, returnitem ) {
+	// rowgroup pre logic
+	var rowgroupcolumnvalue;
+	for ( let j = 0; j < columnslist.length; j++ ) {
+		if ( columnslist[j]["rowgroup"] == "yes" ) {
+			if ( rowgroupcolumnvalue != undefined ) {
+				rowgroupcolumnvalue += ", ";
+			} else {
+				rowgroupcolumnvalue = "[ ";
+			}
+			if ( returnitem == "list" ) {
+				rowgroupcolumnvalue += "[ " + j + ", 'asc']";
+			} else if ( returnitem == "name" ) {
+				rowgroupcolumnvalue += "'" + columnslist[j]["column"] + "'";
+			} else if ( returnitem == "hidecols" ) {
+				rowgroupcolumnvalue += j;
+			}
+		}
+	}
+	if ( rowgroupcolumnvalue != undefined ) {
+		rowgroupcolumnvalue += " ]"
+		//console.log( rowgroupcolumnvalue );
+		return eval(rowgroupcolumnvalue);
+	} else {
+		rowgroupcolumnvalue = '';
+		if ( returnitem == "hidecols" ) {
+			rowgroupcolumnvalue = 'none';
+		}
+		//console.log( rowgroupcolumnvalue );
+		return rowgroupcolumnvalue;
+	}
 }
