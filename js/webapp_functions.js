@@ -353,6 +353,9 @@ function addeditdel_record ( action ) {
 				configpage = $(this).data('name');
 			}
 			dt_table = $(this).closest('table').attr('id');
+			if ( dt_table == undefined ) {
+				dt_table = 'table_records'; // for some reason flat tables return undefined id from DTFC_Cloned
+			}
 		} else if ( action == 'delete' ) {
 			if (confirm("Are you sure you want to delete this record?")) {
 				var job = 'delete_record';
