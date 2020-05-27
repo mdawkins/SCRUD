@@ -57,26 +57,47 @@ if ( !empty($_GET["page"]) ) {
 		if ( array_search( "tableselect", array_column( $colslist, "input_type" ) ) !== null && ($job == "page_lists" || $job == "ajax_select" || $job == "get_record") ) {
 			// create array for creating select dropdown list
 			foreach ( $selslist as $sel ) {
+
+				// Set variables for each and encapsulate if needed
+				$selcol = encap_mixedcase($sel["selcol"]); // not sure it is used
+				$selname = encap_mixedcase($sel["selname"]);
+				$selid = encap_mixedcase($sel["selid"]);
+				$seltable = encap_mixedcase($sel["seltable"]);
+				$seljoin = $sel["seljoin"]; // seljoin == yes means LEFT JOIN seltable as t$i
+				$parselcol = encap_mixedcase($sel["parselcol"]);
+				$wherekey = encap_mixedcase($sel["wherekey"]);
+				$whereval = encap_mixedcase($sel["whereval"]);
+
+				// for oracle schema
+				$seldbtable = $seltable;
+				if ( !empty($datasource) ) {
+					$seldbtable = "$database.$seltable";
+				}
+
 				// This identifies that the select is cascading/nested to a parent select
 				if ( $job != "ajax_select" ) {
 					if ( empty($sel["parselcol"]) && empty($sel["partitle"]) ) {
 					// !!! CANNOT USE SINGLE OR DOUBLE QUOTES HERE, PLACE IN VAR 
 						// if there is a wildcard use LIKE AND key & value are not empty
 						if ( preg_match('/%/', $sel["wherekey"]) || preg_match('/%/', $sel["whereval"]) && (!empty($sel["wherekey"]) && !empty($sel["whereval"])) ) {
-							$wherestring = ' WHERE '.$sel["wherekey"]." LIKE ".$sel["whereval"];
+							$wherestring = "WHERE $wherekey LIKE $whereval";
 						} elseif ( !empty($sel["wherekey"]) && !empty($sel["whereval"]) ) {
-							$wherestring = ' WHERE '.$sel["wherekey"]." = ".$sel["whereval"];
+							$wherestring = "WHERE $wherekey = $whereval";
 						} elseif ( !empty($sel["wherekey"]) ) {
-							$wherestring = ' WHERE '.$sel["wherekey"];
+							$wherestring = "WHERE $wherekey";
 						}
 					} else {
 						$wherestring = "";
 					}
-					$sqlsel_rows = "SELECT ".$sel["selid"].", ".$sel["selname"]." FROM ".$sel["seltable"].$wherestring." ORDER BY ".$sel["selname"];
+					$sel_id_name = "$seltable.$selid, $seltable.$selname";
+					if ( $selname == $selid ) {
+						$sel_id_name = "$seltable.$selname";
+					}
+					$sqlsel_rows = "SELECT $sel_id_name FROM $seldbtable $wherestring ORDER BY $selname";
 					//echo $sqlsel_rows."<br>";
 					$timecheck = array_merge($timecheck, [ "P3-pre".$sel["selcol"] => $eta + microtime(true) ]);
 					$result = db_query($sqlsel_rows);
-					if ( db_num_rows($result) > 0) {
+					if ( $result ) {
 						// output data of each row
 						$i=0;
 						while ( $row = db_fetch_assoc($result) ) {
