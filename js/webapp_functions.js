@@ -179,7 +179,7 @@ function dt_header ( columnslist, tableid, showrownum, showdeletecolumn, id, pag
 		headerhtml += "\t\t\t</ul></div>\n\t\t</th>\n";
 		filterhtml += "\t\t\t</ul></div>\n\t\t</th>\n";
 	}
-	if ( tableid == "maintable" && showfilter == "yes" ) {
+	if ( showfilter == "yes" ) {
 		headerhtml += "\t</tr>\n";
 		headerhtml += filterhtml;
 	}
@@ -667,6 +667,10 @@ function drilldowntable ( parenttable ) {
 						}
 					},
 				});
+				// start Yet Another Datatables Column Filter
+				yadcf.init(childtable, filter_columns( ch_colsls, 'no' ),
+					{ filters_tr_index: 1, cumulative_filtering: true }
+				);
 
 				//For each grandchild table
 				if ( issetdrilldown === 1 ) {
@@ -859,7 +863,7 @@ function load_maintable ( page, tableid, columnslist, rowfmt, showidcolumn, show
 		}
 	});
 
-	// statr Yet Another Datatables Column Filter
+	// start Yet Another Datatables Column Filter
 	yadcf.init(maintable, filter_columns( columnslist, showrownum ),
 		{ filters_tr_index: 1, cumulative_filtering: true }
 	);
