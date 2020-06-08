@@ -637,8 +637,7 @@ function drilldowntable ( parenttable ) {
 					"bPaginate": false,
 					"bSortable": false,
 					"orderCellsTop": true, // Only allow sorting from top thead row
-					"paging": false,
-					"info": false,
+					"dom": 'rt<"clear">',
 					"ajax": {
 						"url": 'data.php?job=get_records',
 						"cache": false,
