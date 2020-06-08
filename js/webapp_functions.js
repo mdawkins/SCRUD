@@ -636,12 +636,12 @@ function drilldowntable ( parenttable ) {
 				var childtable = $('#' + subpage + '_' + tablecount).DataTable({
 					"bPaginate": false,
 					"bSortable": false,
-					"searching": false,
+					"orderCellsTop": true, // Only allow sorting from top thead row
 					"paging": false,
 					"info": false,
 					"ajax": {
 						"url": 'data.php?job=get_records',
-						"cache": true,
+						"cache": false,
 						"data": {'id': id ,'page': subpage, 'dt_table': subpage},
 						"dataType": 'json',
 						"contentType": 'application/json; charset=utf-8',
